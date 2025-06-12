@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Rekam Medis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="max-w-3xl mx-auto p-4">
+
+  <h1 class="text-2xl font-bold mb-4 text-center">📋 Daftar Rekam Medis</h1>
+  <a href="/tambah_rm.html" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">+ Tambah Rekam Medis</a>
+
+  <ul id="rekam-list" class="space-y-2"></ul>
+
+  <script>
+    const graphqlUrl = 'http://localhost:8000/graphql'; // ubah sesuai port kamu
+
+    const query = `
+      query {
+        getAllRekamMedis {
+          id
+          tanggal_dibuat
+          golongan_darah
+          status
+        }
+      }
+    `;
+
+    fetch(graphqlUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    })
+      .then(res => res.json())
+      .then(result => {
+        const data = result.data.getAllRekamMedis;
+        const list = document.getElementById('rekam-list');
+
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.className = "bg-white p-4 rounded shadow";
+          li.innerHTML = `
+            <div class="font-semibold">#${item.id} - ${item.tanggal_dibuat}</div>
+            <div>Darah: ${item.golongan_darah || '-'}</div>
+            <div class="text-sm text-gray-600">Status: ${item.status}</div>
+          `;
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error('Gagal mengambil data rekam medis:', err);
+        document.getElementById('rekam-list').innerHTML =
+          '<li class="text-red-500">Gagal memuat data.</li>';
+      });
+  </script>
+</body>
+</html>

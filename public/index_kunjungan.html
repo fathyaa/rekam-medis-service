@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Kunjungan Pasien</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Kunjungan Pasien</h1>
+
+    <!-- Form tambah kunjungan -->
+    <form id="formKunjungan" class="bg-white p-4 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold mb-2">Tambah Kunjungan</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <input type="number" placeholder="ID Rekam Medis" name="id_rekam_medis" class="border p-2 rounded" required />
+        <input type="number" placeholder="ID Dokter" name="id_dokter" class="border p-2 rounded" required />
+        <input type="number" placeholder="ID Diagnosa" name="id_diagnosa" class="border p-2 rounded" required />
+        <input type="text" placeholder="Tanggal Kunjungan (YYYY-MM-DD)" name="tanggal_kunjungan" class="border p-2 rounded" />
+        <input type="text" placeholder="Keluhan" name="keluhan" class="border p-2 rounded" />
+        <input type="text" placeholder="Tekanan Darah" name="tekanan_darah" class="border p-2 rounded" />
+        <input type="number" step="0.1" placeholder="Berat Badan (kg)" name="berat_badan" class="border p-2 rounded" />
+      </div>
+      <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Simpan
+      </button>
+    </form>
+
+    <!-- Daftar kunjungan -->
+    <div id="kunjunganList" class="space-y-4">
+      <!-- Data kunjungan akan muncul di sini -->
+    </div>
+  </div>
+
+  <script>
+    const graphqlUrl = 'http://localhost:8000/graphql';
+    const form = document.getElementById('formKunjungan');
+    const list = document.getElementById('kunjunganList');
+
+    async function loadKunjungan() {
+      try {
+        const res = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query {
+                getAllKunjungan {
+                  id_kunjungan
+                  id_rekam_medis
+                  id_dokter
+                  id_diagnosa
+                  tanggal_kunjungan
+                  keluhan
+                  tekanan_darah
+                  berat_badan
+                }
+              }
+            `
+          })
+        });
+        const result = await res.json();
+        const data = result.data?.getAllKunjungan || [];
+
+        list.innerHTML = '';
+        data.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'bg-white p-4 rounded shadow';
+          card.innerHTML = `
+            <p><strong>ID:</strong> ${item.id_kunjungan}</p>
+            <p><strong>Rekam Medis:</strong> ${item.id_rekam_medis}</p>
+            <p><strong>Dokter:</strong> ${item.id_dokter}</p>
+            <p><strong>Diagnosa:</strong> ${item.id_diagnosa}</p>
+            <p><strong>Tanggal:</strong> ${item.tanggal_kunjungan || '-'}</p>
+            <p><strong>Keluhan:</strong> ${item.keluhan || '-'}</p>
+            <p><strong>Tekanan Darah:</strong> ${item.tekanan_darah || '-'}</p>
+            <p><strong>Berat Badan:</strong> ${item.berat_badan != null ? item.berat_badan + ' kg' : '-'}</p>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        console.error('❌ Gagal load data kunjungan:', err);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const input = {};
+
+      formData.forEach((v, k) => {
+        if (['id_rekam_medis', 'id_dokter', 'id_diagnosa'].includes(k)) {
+          input[k] = parseInt(v);
+        } else if (k === 'berat_badan') {
+          input[k] = parseFloat(v);
+        } else {
+          input[k] = v;
+        }
+      });
+
+      const mutation = `
+        mutation TambahKunjungan($input: KunjunganInput!) {
+          tambahKunjungan(input: $input) {
+            id_kunjungan
+          }
+        }
+      `;
+
+      try {
+        const response = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: mutation,
+            variables: { input }
+          })
+        });
+
+        const result = await response.json();
+        if (result.errors) {
+          console.error(result.errors);
+          alert('❌ Gagal menyimpan: ' + result.errors[0].message);
+        } else {
+          form.reset();
+          loadKunjungan();
+        }
+      } catch (err) {
+        console.error('❌ Error saat kirim:', err);
+        alert('❌ Terjadi kesalahan koneksi ke server.');
+      }
+    });
+
+    loadKunjungan();
+  </script>
+</body>
+</html>
