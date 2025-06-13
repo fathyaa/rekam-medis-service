@@ -60,7 +60,7 @@ const resolvers = {
           }
         }
       `;
-      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:4000/graphql';
+      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql';
       const response = await fetch(rawatInapUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,7 +124,7 @@ const resolvers = {
         }
       `;
 
-      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:4000/graphql';
+      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql';
       const response = await fetch(rawatInapUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
