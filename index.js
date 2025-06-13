@@ -4,10 +4,16 @@ const typeDefs = require('./graphql/schema');
 const resolvers = require('./graphql/resolvers.js');
 const db = require('./models');
 const path = require('path');
+
 const app = express();
 
 // ✅ Serve file HTML & aset statis dari folder /public
 app.use(express.static(path.join(__dirname, './public')));
+
+// ✅ Tambahkan route untuk root agar arahkan ke index_rm.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index_rm.html'));
+});
 
 // ✅ Tambahkan context agar resolvers bisa akses db
 const server = new ApolloServer({

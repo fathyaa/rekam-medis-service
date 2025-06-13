@@ -1,57 +1,200 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-gray-100">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Daftar Rekam Medis</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rekam Medis Terintegrasi</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="max-w-3xl mx-auto p-4">
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Data Rekam Medis & Pasien</h1>
+      <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">+ Tambah Rekam Medis</button>
+    </div>
+    <div id="rekamMedisList" class="space-y-4"></div>
+  </div>
 
-  <h1 class="text-2xl font-bold mb-4 text-center">📋 Daftar Rekam Medis</h1>
-  <a href="/tambah_rm.html" class="bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">+ Tambah Rekam Medis</a>
-
-  <ul id="rekam-list" class="space-y-2"></ul>
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+      <h2 id="modalTitle" class="text-xl font-semibold mb-4">Tambah Rekam Medis</h2>
+      <form id="rekamForm" class="space-y-4">
+        <input type="hidden" name="id" />
+        <select name="id_pasien" class="w-full border px-3 py-2 rounded">
+          <option value="">Loading...</option>
+        </select>
+        <input type="text" name="golongan_darah" placeholder="Golongan Darah" required class="w-full border px-3 py-2 rounded" />
+        <input type="text" name="alergi" placeholder="Alergi" class="w-full border px-3 py-2 rounded" />
+        <input type="text" name="riwayat_penyakit" placeholder="Riwayat Penyakit" class="w-full border px-3 py-2 rounded" />
+        <input type="text" name="catatan_dokter" placeholder="Catatan Dokter" class="w-full border px-3 py-2 rounded" />
+        <select name="status" required class="w-full border px-3 py-2 rounded">
+          <option value="">Pilih Status</option>
+          <option value="aktif">Aktif</option>
+          <option value="nonaktif">Nonaktif</option>
+        </select>
+        <div class="flex justify-end gap-3">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Batal</button>
+          <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
-    const graphqlUrl = 'http://localhost:8001/graphql'; // ubah sesuai port kamu
+    const modal = document.getElementById('modal');
+    const form = document.getElementById('rekamForm');
+    const titleEl = document.getElementById('modalTitle');
 
-    const query = `
-      query {
-        getAllRekamMedis {
-          id
-          tanggal_dibuat
-          golongan_darah
-          status
-        }
-      }
-    `;
+    function openModal(data = null) {
+      titleEl.textContent = data ? 'Edit Rekam Medis' : 'Tambah Rekam Medis';
+      ['id','id_pasien','golongan_darah','alergi','riwayat_penyakit','catatan_dokter','status']
+        .forEach(field => form[field].value = data ? data[field] || '' : '');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      fetchPasienDropdown();
+    }
 
-    fetch(graphqlUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    })
-      .then(res => res.json())
-      .then(result => {
-        const data = result.data.getAllRekamMedis;
-        const list = document.getElementById('rekam-list');
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
 
-        data.forEach(item => {
-          const li = document.createElement('li');
-          li.className = "bg-white p-4 rounded shadow";
-          li.innerHTML = `
-            <div class="font-semibold">#${item.id} - ${item.tanggal_dibuat}</div>
-            <div>Darah: ${item.golongan_darah || '-'}</div>
-            <div class="text-sm text-gray-600">Status: ${item.status}</div>
-          `;
-          list.appendChild(li);
-        });
-      })
-      .catch(err => {
-        console.error('Gagal mengambil data rekam medis:', err);
-        document.getElementById('rekam-list').innerHTML =
-          '<li class="text-red-500">Gagal memuat data.</li>';
+    async function fetchPasienDropdown() {
+      const res = await fetch('http://localhost:8001/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `query {
+            getAllPasien {
+              id
+              nama
+            }
+          }`
+        })
       });
+
+      const data = await res.json();
+      const select = document.querySelector('select[name="id_pasien"]');
+      select.innerHTML = '<option value="">Pilih Pasien</option>';
+      data.data.getAllPasien.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id; // yang dikirim nanti tetap ID
+        opt.textContent = p.nama; // yang ditampilkan di UI
+        select.appendChild(opt);
+      });
+    }
+
+    async function fetchRekamMedis() {
+      const res = await fetch('http://localhost:8001/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `query {
+            getRekamDanPasienById(id_pasien: 1) {
+              pasien { id nama nik }
+              rekamMedis {
+                id id_pasien golongan_darah alergi status tanggal_dibuat
+              }
+            }
+          }`
+        })
+      });
+      const { data } = await res.json();
+      const { pasien, rekamMedis } = data.getRekamDanPasienById;
+      const list = document.getElementById('rekamMedisList');
+      list.innerHTML = `<div class="bg-white p-4 rounded-lg shadow">
+        <p class="font-semibold">Pasien: ${pasien.nama} (NIK: ${pasien.nik})</p>
+      </div>`;
+      rekamMedis.forEach(rm => {
+        list.innerHTML += `
+          <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+            <div>
+              <p><strong>#${rm.id}</strong> Tanggal: ${rm.tanggal_dibuat}</p>
+              <p>Gol. Darah: ${rm.golongan_darah} • Alergi: ${rm.alergi}</p>
+              <p>Status: <span class="font-semibold">${rm.status}</span></p>
+            </div>
+            <div class="space-x-2">
+              <button onclick="openModal(${JSON.stringify(rm)})" class="text-blue-600 hover:underline">Edit</button>
+              <button onclick="deleteRekam(${rm.id})" class="text-red-600 hover:underline">Hapus</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form));
+      const isEdit = !!data.id;
+      const query = isEdit
+      ? `mutation($id: Int!, $tanggal_dibuat: String, $golongan_darah: String, $alergi: String, $riwayat_penyakit: String, $catatan_dokter: String, $status: String) {
+          updateRekamMedis(
+            id: $id,
+            tanggal_dibuat: $tanggal_dibuat,
+            golongan_darah: $golongan_darah,
+            alergi: $alergi,
+            riwayat_penyakit: $riwayat_penyakit,
+            catatan_dokter: $catatan_dokter,
+            status: $status
+          ) {
+            id
+          }
+        }`
+      : `mutation($input: RekamMedisInput!) {
+          tambahRekamMedis(input: $input) {
+            id
+          }
+        }`;
+
+      const vars = isEdit
+      ? {
+          id: +data.id,
+          tanggal_dibuat: new Date().toISOString(),
+          golongan_darah: data.golongan_darah,
+          alergi: data.alergi,
+          riwayat_penyakit: data.riwayat_penyakit,
+          catatan_dokter: data.catatan_dokter,
+          status: data.status
+        }
+      : {
+          input: {
+            id_pasien: form.id_pasien.value,
+            tanggal_dibuat: new Date().toISOString(),
+            golongan_darah: data.golongan_darah,
+            alergi: data.alergi,
+            riwayat_penyakit: data.riwayat_penyakit,
+            catatan_dokter: data.catatan_dokter,
+            status: data.status
+          }
+        };
+
+
+      await fetch('http://localhost:8001/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: vars })
+      });
+
+      closeModal();
+      fetchRekamMedis();
+    });
+
+    async function deleteRekam(id) {
+      if(!confirm('Yakin hapus rekam medis #' + id + '?')) return;
+      await fetch('http://localhost:8001/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `mutation($id: Int!) {
+            hapusRekamMedis(id: $id)
+          }`,
+          variables: { id: +id }
+        })
+      });
+      fetchRekamMedis();
+    }
+
+    fetchRekamMedis();
   </script>
 </body>
 </html>

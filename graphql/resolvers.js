@@ -14,40 +14,47 @@ const resolvers = {
     getAllKunjungan: async (_, __, { db }) => {
       return db.Kunjungan.findAll();
     },
-    // getRekamMedisDanPasien: async (_, { id_pasien }) => {
-    //   const [rekamMedisRes, pasienRes] = await Promise.all([
-    //     fetch('http://localhost:8001/graphql', {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify({
-    //         query: `query {
-    //           getAllRekamMedis {
-    //             id id_pasien tanggal_dibuat golongan_darah alergi
-    //             riwayat_penyakit catatan_dokter status
-    //           }
-    //         }`
-    //       })
-    //     }).then(res => res.json()),
+    getRekamDanPasienById: async (_, { id_pasien }, { db }) => {
+      const rekamMedisUrl = process.env.REKAMMEDIS_URL || 'http://rekam-medis-service:8001/graphql';
+      const pasienUrl = process.env.DATA_INDIVIDU_URL || 'http://data-individu-service:8000/graphql';
 
-    //     fetch('http://localhost:8002/graphql', {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify({
-    //         query: `query getPasienById($id: Int!) {
-    //           getPasien(id: $id) {
-    //             id nama nik jenis_kelamin alamat tanggal_lahir
-    //           }
-    //         }`,
-    //         variables: { id: id_pasien }
-    //       })
-    //     }).then(res => res.json())
-    //   ]);
+      const [rekamRes, pasienRes] = await Promise.all([
+        fetch(rekamMedisUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query {
+                getAllRekamMedis {
+                  id id_pasien tanggal_dibuat golongan_darah alergi riwayat_penyakit catatan_dokter status
+                }
+              }
+            `
+          })
+        }).then(res => res.json()),
 
-    //   const rekamMedis = rekamMedisRes.data?.getAllRekamMedis?.filter(rm => rm.id_pasien === id_pasien) || [];
-    //   const pasien = pasienRes.data?.getPasien || null;
+        fetch(pasienUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query getPasien($id: Int!) {
+                getPasien(id: $id) {
+                  id nama nik jenis_kelamin alamat tanggal_lahir
+                }
+              }
+            `,
+            variables: { id: id_pasien }
+          })
+        }).then(res => res.json())
+      ]);
 
-    //   return { rekamMedis, pasien };
-    // },
+      const allRM = rekamRes.data?.getAllRekamMedis || [];
+      const pasienData = pasienRes.data?.getPasien || null;
+      const filtered = allRM.filter(rm => rm.id_pasien === id_pasien);
+
+      return { pasien: pasienData, rekamMedis: filtered };
+    },
     getDiagnosaById: async (_, { id }) => {
       const diagnosaQuery = `
         query($id: Int!) {
@@ -105,7 +112,7 @@ const resolvers = {
       if (!kunjungan) throw new Error("Kunjungan tidak ditemukan");
       await kunjungan.destroy();
       return true;
-    }
+    },
   },
 
   Kunjungan: {

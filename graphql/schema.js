@@ -59,6 +59,11 @@ const typeDefs = gql`
     tanggal_lahir: String
   }
 
+  type RekamDanPasien {
+  pasien: Pasien
+  rekamMedis: [RekamMedis!]!
+}
+
   type Query {
     getAllRekamMedis: [RekamMedis]
     getRekamMedisById(id: ID!): RekamMedis
@@ -66,6 +71,8 @@ const typeDefs = gql`
     getAllKunjunganByRekamMedisId(id_rekam_medis: Int!): [Kunjungan]
     getRekamMedisDanPasien(id_pasien: Int!): RekamMedisWithPasien
     getDiagnosaById(id: Int!): DiagnosaInap
+    getRekamDanPasienById(id_pasien: Int!): RekamDanPasien
+    getAllPasien: [Pasien]
   }
 
   type DiagnosaInap {
