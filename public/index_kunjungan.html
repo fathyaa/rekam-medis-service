@@ -34,7 +34,7 @@
   </div>
 
   <script>
-    const graphqlUrl = 'http://localhost:8000/graphql';
+    const graphqlUrl = 'http://localhost:8001/graphql';
     const form = document.getElementById('formKunjungan');
     const list = document.getElementById('kunjunganList');
 
@@ -55,23 +55,33 @@
                   keluhan
                   tekanan_darah
                   berat_badan
+                  diagnosa {
+                    nama_diagnosa
+                    kode_icd10
+                  }
                 }
               }
             `
           })
         });
+
         const result = await res.json();
         const data = result.data?.getAllKunjungan || [];
 
         list.innerHTML = '';
         data.forEach(item => {
+          const diagnosaHtml = item.diagnosa
+            ? `<p><strong>Diagnosa:</strong> ${item.diagnosa.nama_diagnosa} (${item.diagnosa.kode_icd10})</p>`
+            : `<p><strong>Diagnosa:</strong> <em>Belum ada</em></p>`;
+
           const card = document.createElement('div');
           card.className = 'bg-white p-4 rounded shadow';
           card.innerHTML = `
             <p><strong>ID:</strong> ${item.id_kunjungan}</p>
             <p><strong>Rekam Medis:</strong> ${item.id_rekam_medis}</p>
             <p><strong>Dokter:</strong> ${item.id_dokter}</p>
-            <p><strong>Diagnosa:</strong> ${item.id_diagnosa}</p>
+            <p><strong>ID Diagnosa:</strong> ${item.id_diagnosa}</p>
+            ${diagnosaHtml}
             <p><strong>Tanggal:</strong> ${item.tanggal_kunjungan || '-'}</p>
             <p><strong>Keluhan:</strong> ${item.keluhan || '-'}</p>
             <p><strong>Tekanan Darah:</strong> ${item.tekanan_darah || '-'}</p>
