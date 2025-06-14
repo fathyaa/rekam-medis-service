@@ -67,7 +67,7 @@ Secara default akan berjalan di: `http://localhost:8000`
 
 ## 📊 GraphQL Endpoint
 
-- **URL:** `http://localhost:8000/graphql`
+- **URL:** `http://localhost:8001/graphql`
 
 ### Contoh Query:
 
@@ -100,12 +100,12 @@ query {
 Buat file `.env` jika diperlukan:
 
 ```env
-PORT=8000
+PORT=8001
 DATABASE_URL=postgres://user:password@host:port/dbname
 RAWATJALAN_URL=http://rawat-jalan-service:8004/graphql
-RAWATINAP_URL=http://rawat-inap-service:8005/graphql
-KUNJUNGAN_URL=http://kunjungan-service:8003/graphql
-PASIEN_URL=http://data-individu-service:8002/graphql
+RAWATINAP_URL=http://rawat-inap-service:8003/graphql
+RESEP_URL=http://resep-service:8002/graphql
+PASIEN_URL=http://data-individu-service:8000/graphql
 ```
 
 ---
@@ -117,9 +117,3 @@ PASIEN_URL=http://data-individu-service:8002/graphql
 - **Apollo Server + GraphQL**
 - **Sequelize (PostgreSQL)**
 - **Docker (optional for deployment)**
-
----
-
-## 📄 Lisensi
-
-MIT License. © 2025 [Fathya Ariyani](https://github.com/fathyaa)
