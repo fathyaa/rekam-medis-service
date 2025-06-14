@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const db = require('../models');
 
 const resolvers = {
   Query: {
@@ -14,71 +15,26 @@ const resolvers = {
     getAllKunjungan: async (_, __, { db }) => {
       return db.Kunjungan.findAll();
     },
-    getRekamDanPasienById: async (_, { id_pasien }, { db }) => {
-      const rekamMedisUrl = process.env.REKAMMEDIS_URL || 'http://rekam-medis-service:8001/graphql';
-      const pasienUrl = process.env.DATA_INDIVIDU_URL || 'http://data-individu-service:8000/graphql';
-
-      const [rekamRes, pasienRes] = await Promise.all([
-        fetch(rekamMedisUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query {
-                getAllRekamMedis {
-                  id id_pasien tanggal_dibuat golongan_darah alergi riwayat_penyakit catatan_dokter status
-                }
-              }
-            `
-          })
-        }).then(res => res.json()),
-
-        fetch(pasienUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query getPasien($id: Int!) {
-                getPasien(id: $id) {
-                  id nama nik jenis_kelamin alamat tanggal_lahir
-                }
-              }
-            `,
-            variables: { id: id_pasien }
-          })
-        }).then(res => res.json())
-      ]);
-
-      const allRM = rekamRes.data?.getAllRekamMedis || [];
-      const pasienData = pasienRes.data?.getPasien || null;
-      const filtered = allRM.filter(rm => rm.id_pasien === id_pasien);
-
-      return { pasien: pasienData, rekamMedis: filtered };
-    },
-    getDiagnosaById: async (_, { id }) => {
-      const diagnosaQuery = `
-        query($id: Int!) {
-          diagnosaInap(id: $id) {
-            id_diagnosa_inap
-            id_rawat_inap
-            id_kunjungan
-            nama_diagnosa
-            kode_icd10
-          }
-        }
-      `;
-      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql';
-      const response = await fetch(rawatInapUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    getAllPasien: async () => {
+      const response = await fetch("http://data-individu-service:8000/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: diagnosaQuery,
-          variables: { id }
-        })
+          query: `
+            query {
+              getAllPasien {
+                id
+                nama
+                tanggal_lahir
+                nik
+              }
+            }
+          `,
+        }),
       });
 
-      const result = await response.json();
-      return result.data?.diagnosaInap || null;
+      const json = await response.json();
+      return json.data.getAllPasien;
     }
   },
 
@@ -95,16 +51,44 @@ const resolvers = {
       await rm.destroy();
       return "Rekam medis berhasil dihapus";
     },
-    updateRekamMedis: async (_, { id, ...args }, { db }) => {
+   updateRekamMedis: async (_, { input }, { db }) => { // <--- PERUBAHAN DI SINI
+      const { id, tanggal_dibuat, golongan_darah, alergi, riwayat_penyakit, catatan_dokter, status } = input; // <--- DESTRUKTURISASI DARI OBJEK 'input'
+
       const rekamMedis = await db.RekamMedis.findByPk(id);
-      if (!rekamMedis) throw new Error("Rekam medis tidak ditemukan");
-      await rekamMedis.update(args);
+      if (!rekamMedis) {
+        throw new Error("Rekam medis tidak ditemukan"); // Pesan error ini sudah benar
+      }
+
+      // Update hanya field yang disediakan (opsional: bisa lebih selektif)
+      // Ini akan mengupdate semua field yang ada di objek 'input'
+      await rekamMedis.update({
+        tanggal_dibuat,
+        golongan_darah,
+        alergi,
+        riwayat_penyakit,
+        catatan_dokter,
+        status
+      });
+
       return rekamMedis;
     },
-    updateKunjungan: async (_, { id_kunjungan, ...args }, { db }) => {
+   updateKunjungan: async (_, { input }, { db }) => { // <--- PERUBAHAN DI SINI
+      const { id_kunjungan, tanggal_kunjungan, keluhan, tekanan_darah, berat_badan } // <--- DESTRUKTURISASI DARI OBJEK 'input'
+            = input;
+
       const kunjungan = await db.Kunjungan.findByPk(id_kunjungan);
-      if (!kunjungan) throw new Error("Kunjungan tidak ditemukan");
-      await kunjungan.update(args);
+      if (!kunjungan) {
+        throw new Error("Kunjungan tidak ditemukan"); // Pesan error ini sudah benar
+      }
+
+      // Melakukan update ke database hanya untuk field yang ada di 'input'
+      await kunjungan.update({
+        tanggal_kunjungan,
+        keluhan,
+        tekanan_darah,
+        berat_badan
+      });
+
       return kunjungan;
     },
     hapusKunjungan: async (_, { id_kunjungan }, { db }) => {
@@ -116,33 +100,96 @@ const resolvers = {
   },
 
   Kunjungan: {
-    diagnosa: async (parent) => {
-      if (!parent.id_kunjungan) return null;
-
-      const diagnosaQuery = `
+    rawatInap: async (parent) => {
+      const query = `
         query($id_kunjungan: Int!) {
-          diagnosaInap(id_kunjungan: $id_kunjungan) {
-            id_diagnosa_inap
+          rawatInapByKunjungan(id_kunjungan: $id_kunjungan) {
             id_rawat_inap
-            id_kunjungan
-            nama_diagnosa
-            kode_icd10
+            id_kamar
+            tanggal_masuk
+            tanggal_keluar
+            diagnosa {
+              id_diagnosa_inap
+              nama_diagnosa
+              kode_icd10
+            }
           }
         }
       `;
 
-      const rawatInapUrl = process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql';
-      const response = await fetch(rawatInapUrl, {
+      const response = await fetch(process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: diagnosaQuery,
+          query,
           variables: { id_kunjungan: parent.id_kunjungan }
         })
       });
 
       const result = await response.json();
-      return result.data?.diagnosaInap || null;
+      return result.data?.rawatInapByKunjungan || null;
+    },
+
+    rawatJalan: async (parent) => {
+      const query = `
+        query($id_kunjungan: Int!) {
+          rawatJalanByKunjungan(id_kunjungan: $id_kunjungan) {
+            id_rawat_jalan
+            tanggal_kunjungan
+            keluhan
+            catatan_dokter
+            status
+            diagnosa {
+              id_diagnosa_jalan
+              nama_diagnosa
+              kode_icd10
+            }
+          }
+        }
+      `;
+
+      const response = await fetch(process.env.RAWATJALAN_URL || 'http://rawat-jalan-service:8004/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query,
+          variables: { id_kunjungan: parent.id_kunjungan }
+        })
+      });
+
+      const result = await response.json();
+      console.log("id_kunjungan", parent.id_kunjungan);
+      console.log("response", result);
+      return result.data?.rawatJalanByKunjungan || null;
+    }
+  },
+
+  RekamMedis: {
+    pasien: async (parent) => {
+      try {
+        const res = await fetch('http://data-individu-service:8000/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query PasienById($id: Int!) {
+                pasien(id: $id) {
+                  id
+                  nama
+                  tanggal_lahir
+                }
+              }
+            `,
+            variables: { id: parent.id_pasien },
+          }),
+        });
+
+        const json = await res.json();
+        return json.data.pasien;
+      } catch (err) {
+        console.error("Gagal fetch pasien:", err);
+        return null;
+      }
     }
   }
 };

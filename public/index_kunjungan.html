@@ -3,144 +3,579 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data Kunjungan Pasien</title>
+  <title>Kunjungan Pasien Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in-out',
+            'slide-in': 'slideIn 0.3s ease-out',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Kunjungan Pasien</h1>
-
-    <!-- Form tambah kunjungan -->
-    <form id="formKunjungan" class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold mb-2">Tambah Kunjungan</h2>
-      <div class="grid grid-cols-2 gap-4">
-        <input type="number" placeholder="ID Rekam Medis" name="id_rekam_medis" class="border p-2 rounded" required />
-        <input type="number" placeholder="ID Dokter" name="id_dokter" class="border p-2 rounded" required />
-        <input type="number" placeholder="ID Diagnosa" name="id_diagnosa" class="border p-2 rounded" required />
-        <input type="text" placeholder="Tanggal Kunjungan (YYYY-MM-DD)" name="tanggal_kunjungan" class="border p-2 rounded" />
-        <input type="text" placeholder="Keluhan" name="keluhan" class="border p-2 rounded" />
-        <input type="text" placeholder="Tekanan Darah" name="tekanan_darah" class="border p-2 rounded" />
-        <input type="number" step="0.1" placeholder="Berat Badan (kg)" name="berat_badan" class="border p-2 rounded" />
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <!-- Header -->
+  <div class="bg-white shadow-lg border-b-4 border-blue-500">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">🏥 Kunjungan Pasien</h1>
+          <p class="text-gray-600 mt-1">Kelola data kunjungan dan perawatan pasien</p>
+        </div>
+        <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg">
+          ➕ Tambah Kunjungan
+        </button>
       </div>
-      <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Simpan
-      </button>
-    </form>
+    </div>
+  </div>
 
-    <!-- Daftar kunjungan -->
-    <div id="kunjunganList" class="space-y-4">
-      <!-- Data kunjungan akan muncul di sini -->
+  <!-- Main Content -->
+  <div class="container mx-auto px-6 py-8">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-blue-500">
+        <div class="flex items-center">
+          <div class="bg-blue-100 p-3 rounded-full">
+            <span class="text-2xl">📋</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-gray-600 text-sm">Total Kunjungan</p>
+            <p id="totalKunjungan" class="text-2xl font-bold text-gray-800">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-green-500">
+        <div class="flex items-center">
+          <div class="bg-green-100 p-3 rounded-full">
+            <span class="text-2xl">🚶</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-gray-600 text-sm">Rawat Jalan</p>
+            <p id="totalRawatJalan" class="text-2xl font-bold text-gray-800">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-red-500">
+        <div class="flex items-center">
+          <div class="bg-red-100 p-3 rounded-full">
+            <span class="text-2xl">🏠</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-gray-600 text-sm">Rawat Inap</p>
+            <p id="totalRawatInap" class="text-2xl font-bold text-gray-800">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-lg border-l-4 border-purple-500">
+        <div class="flex items-center">
+          <div class="bg-purple-100 p-3 rounded-full">
+            <span class="text-2xl">📅</span>
+          </div>
+          <div class="ml-4">
+            <p class="text-gray-600 text-sm">Hari Ini</p>
+            <p id="kunjunganHariIni" class="text-2xl font-bold text-gray-800">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+          <input type="text" id="searchInput" placeholder="🔍 Cari berdasarkan ID, keluhan, atau diagnosa..." 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <select id="filterType" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          <option value="">Semua Jenis</option>
+          <option value="rawat_jalan">Rawat Jalan</option>
+          <option value="rawat_inap">Rawat Inap</option>
+        </select>
+        <button onclick="applyFilter()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+          Filter
+        </button>
+      </div>
+    </div>
+
+    <!-- Kunjungan List -->
+    <div id="kunjunganList" class="space-y-6">
+      <!-- Data akan muncul di sini -->
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12 hidden">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <p class="mt-4 text-gray-600">Memuat data kunjungan...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-12 hidden">
+      <div class="text-6xl mb-4">📋</div>
+      <h3 class="text-xl font-semibold text-gray-700 mb-2">Belum ada data kunjungan</h3>
+      <p class="text-gray-500 mb-6">Tambahkan kunjungan pasien pertama Anda</p>
+      <button onclick="openAddModal()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+        Tambah Kunjungan
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Add/Edit -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200">
+        <h2 id="modalTitle" class="text-2xl font-bold text-gray-800">Tambah Kunjungan</h2>
+      </div>
+      
+      <form id="kunjunganForm" class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">ID Rekam Medis</label>
+            <input type="number" id="idRekamMedis" required 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">ID Dokter</label>
+            <input type="number" id="idDokter" required 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Kunjungan</label>
+          <input type="date" id="tanggalKunjungan" required 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Keluhan</label>
+          <textarea id="keluhan" rows="3" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Masukkan keluhan pasien..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tekanan Darah</label>
+            <input type="text" id="tekananDarah" placeholder="120/80" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Berat Badan (kg)</label>
+            <input type="number" id="beratBadan" step="0.1" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <button type="button" onclick="closeModal()" 
+                  class="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Batal
+          </button>
+          <button type="submit" 
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <span id="submitButtonText">Simpan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+      <div class="p-6 text-center">
+        <div class="text-6xl mb-4">⚠️</div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Konfirmasi Hapus</h3>
+        <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus kunjungan ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="flex justify-center space-x-4">
+          <button onclick="closeDeleteModal()" 
+                  class="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Batal
+          </button>
+          <button onclick="confirmDelete()" 
+                  class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            Hapus
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
     const graphqlUrl = 'http://localhost:8001/graphql';
-    const form = document.getElementById('formKunjungan');
-    const list = document.getElementById('kunjunganList');
+    let currentEditId = null;
+    let deleteId = null;
+    let allKunjungan = [];
 
+    // Load data kunjungan
     async function loadKunjungan() {
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const list = document.getElementById('kunjunganList');
+      
+      loadingState.classList.remove('hidden');
+      list.innerHTML = '';
+      emptyState.classList.add('hidden');
+
       try {
         const res = await fetch(graphqlUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: `
-              query {
+              query GetAllKunjungan {
                 getAllKunjungan {
                   id_kunjungan
                   id_rekam_medis
                   id_dokter
-                  id_diagnosa
                   tanggal_kunjungan
                   keluhan
                   tekanan_darah
                   berat_badan
-                  diagnosa {
-                    nama_diagnosa
-                    kode_icd10
+                  rawatJalan {
+                    id_rawat_jalan
+                  }
+                  rawatInap {
+                    id_rawat_inap
+                    tanggal_masuk
+                    tanggal_keluar
+                    diagnosa {
+                      nama_diagnosa
+                    }
                   }
                 }
               }
             `
           })
         });
-
+        
         const result = await res.json();
-        const data = result.data?.getAllKunjungan || [];
-
-        list.innerHTML = '';
-        data.forEach(item => {
-          const diagnosaHtml = item.diagnosa
-            ? `<p><strong>Diagnosa:</strong> ${item.diagnosa.nama_diagnosa} (${item.diagnosa.kode_icd10})</p>`
-            : `<p><strong>Diagnosa:</strong> <em>Belum ada</em></p>`;
-
-          const card = document.createElement('div');
-          card.className = 'bg-white p-4 rounded shadow';
-          card.innerHTML = `
-            <p><strong>ID:</strong> ${item.id_kunjungan}</p>
-            <p><strong>Rekam Medis:</strong> ${item.id_rekam_medis}</p>
-            <p><strong>Dokter:</strong> ${item.id_dokter}</p>
-            <p><strong>ID Diagnosa:</strong> ${item.id_diagnosa}</p>
-            ${diagnosaHtml}
-            <p><strong>Tanggal:</strong> ${item.tanggal_kunjungan || '-'}</p>
-            <p><strong>Keluhan:</strong> ${item.keluhan || '-'}</p>
-            <p><strong>Tekanan Darah:</strong> ${item.tekanan_darah || '-'}</p>
-            <p><strong>Berat Badan:</strong> ${item.berat_badan != null ? item.berat_badan + ' kg' : '-'}</p>
-          `;
-          list.appendChild(card);
-        });
+        allKunjungan = result.data?.getAllKunjungan || [];
+        
+        loadingState.classList.add('hidden');
+        
+        if (allKunjungan.length === 0) {
+          emptyState.classList.remove('hidden');
+        } else {
+          displayKunjungan(allKunjungan);
+          updateStats(allKunjungan);
+        }
       } catch (err) {
         console.error('❌ Gagal load data kunjungan:', err);
+        loadingState.classList.add('hidden');
+        list.innerHTML = '<div class="text-center text-red-600 py-8">❌ Gagal memuat data. Silakan refresh halaman.</div>';
       }
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const input = {};
+    // Display kunjungan
+    function displayKunjungan(data) {
+      const list = document.getElementById('kunjunganList');
+      list.innerHTML = '';
+      
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 animate-fade-in';
+        
+        const rawatJalan = item.rawatJalan 
+          ? '<div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 font-medium">🚶 Rawat Jalan</div>'
+          : '';
+          
+        const rawatInap = item.rawatInap 
+          ? `<div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800 font-medium">🏠 Rawat Inap</div>`
+          : '';
 
-      formData.forEach((v, k) => {
-        if (['id_rekam_medis', 'id_dokter', 'id_diagnosa'].includes(k)) {
-          input[k] = parseInt(v);
-        } else if (k === 'berat_badan') {
-          input[k] = parseFloat(v);
-        } else {
-          input[k] = v;
-        }
+        const rawatInapDetails = item.rawatInap ? `
+          <div class="mt-4 bg-red-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-red-800 mb-2">Detail Rawat Inap</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span class="text-gray-600">Tanggal Masuk:</span>
+                <p class="font-medium">${item.rawatInap.tanggal_masuk || '-'}</p>
+              </div>
+              <div>
+                <span class="text-gray-600">Tanggal Keluar:</span>
+                <p class="font-medium">${item.rawatInap.tanggal_keluar || 'Masih dirawat'}</p>
+              </div>
+              <div>
+                <span class="text-gray-600">Diagnosa:</span>
+                <p class="font-medium">${item.rawatInap.diagnosa?.nama_diagnosa || '-'}</p>
+              </div>
+            </div>
+          </div>
+        ` : '';
+
+        card.innerHTML = `
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <div class="flex items-center space-x-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                  <span class="text-lg">🏥</span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800">Kunjungan #${item.id_kunjungan}</h3>
+                  <p class="text-sm text-gray-600">${item.tanggal_kunjungan || '-'}</p>
+                </div>
+              </div>
+              <div class="flex space-x-2">
+                ${rawatJalan}
+                ${rawatInap}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <span class="text-sm text-gray-600">Rekam Medis</span>
+                <p class="font-semibold">#${item.id_rekam_medis}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <span class="text-sm text-gray-600">Dokter</span>
+                <p class="font-semibold">#${item.id_dokter}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <span class="text-sm text-gray-600">Berat Badan</span>
+                <p class="font-semibold">${item.berat_badan ? item.berat_badan + ' kg' : '-'}</p>
+              </div>
+            </div>
+
+            ${item.keluhan ? `
+              <div class="mb-4">
+                <span class="text-sm text-gray-600">Keluhan:</span>
+                <p class="mt-1 p-3 bg-yellow-50 rounded-lg text-gray-800">${item.keluhan}</p>
+              </div>
+            ` : ''}
+
+            ${item.tekanan_darah ? `
+              <div class="mb-4">
+                <span class="text-sm text-gray-600">Tekanan Darah:</span>
+                <p class="font-semibold text-lg">${item.tekanan_darah}</p>
+              </div>
+            ` : ''}
+
+            ${rawatInapDetails}
+
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-100">
+              <button onclick="openEditModal(${item.id_kunjungan})" 
+                      class="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors font-medium">
+                ✏️ Edit
+              </button>
+              <button onclick="openDeleteModal(${item.id_kunjungan})" 
+                      class="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-medium">
+                🗑️ Hapus
+              </button>
+            </div>
+          </div>
+        `;
+        
+        list.appendChild(card);
       });
+    }
 
-      const mutation = `
-        mutation TambahKunjungan($input: KunjunganInput!) {
-          tambahKunjungan(input: $input) {
-            id_kunjungan
-          }
-        }
-      `;
+    // Update statistics
+    function updateStats(data) {
+      const today = new Date().toISOString().split('T')[0];
+      const rawatJalanCount = data.filter(item => item.rawatJalan).length;
+      const rawatInapCount = data.filter(item => item.rawatInap).length;
+      const todayCount = data.filter(item => item.tanggal_kunjungan === today).length;
+
+      document.getElementById('totalKunjungan').textContent = data.length;
+      document.getElementById('totalRawatJalan').textContent = rawatJalanCount;
+      document.getElementById('totalRawatInap').textContent = rawatInapCount;
+      document.getElementById('kunjunganHariIni').textContent = todayCount;
+    }
+
+    // Modal functions
+    function openAddModal() {
+      currentEditId = null;
+      document.getElementById('modalTitle').textContent = 'Tambah Kunjungan';
+      document.getElementById('submitButtonText').textContent = 'Simpan';
+      document.getElementById('kunjunganForm').reset();
+      document.getElementById('tanggalKunjungan').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+
+    function openEditModal(id) {
+      const kunjungan = allKunjungan.find(k => k.id_kunjungan === id);
+      if (!kunjungan) return;
+
+      currentEditId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Kunjungan';
+      document.getElementById('submitButtonText').textContent = 'Update';
+      
+      document.getElementById('idRekamMedis').value = kunjungan.id_rekam_medis;
+      document.getElementById('idDokter').value = kunjungan.id_dokter;
+      document.getElementById('tanggalKunjungan').value = kunjungan.tanggal_kunjungan;
+      document.getElementById('keluhan').value = kunjungan.keluhan || '';
+      document.getElementById('tekananDarah').value = kunjungan.tekanan_darah || '';
+      document.getElementById('beratBadan').value = kunjungan.berat_badan || '';
+      
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal').classList.remove('flex');
+    }
+
+    function openDeleteModal(id) {
+      deleteId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+      document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      deleteId = null;
+      document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    // Form submission
+    document.getElementById('kunjunganForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        id_rekam_medis: parseInt(document.getElementById('idRekamMedis').value),
+        id_dokter: parseInt(document.getElementById('idDokter').value),
+        tanggal_kunjungan: document.getElementById('tanggalKunjungan').value,
+        keluhan: document.getElementById('keluhan').value,
+        tekanan_darah: document.getElementById('tekananDarah').value,
+        berat_badan: document.getElementById('beratBadan').value ? parseFloat(document.getElementById('beratBadan').value) : null
+      };
 
       try {
-        const response = await fetch(graphqlUrl, {
+        const mutation = currentEditId ? 'updateKunjungan' : 'createKunjungan';
+        const variables = currentEditId ? { id: currentEditId, ...formData } : formData;
+        
+        const res = await fetch(graphqlUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            query: mutation,
-            variables: { input }
+            query: `
+              mutation ${currentEditId ? 'UpdateKunjungan' : 'CreateKunjungan'}(${currentEditId ? '$id: Int!, ' : ''}$id_rekam_medis: Int!, $id_dokter: Int!, $tanggal_kunjungan: String!, $keluhan: String, $tekanan_darah: String, $berat_badan: Float) {
+                ${mutation}(${currentEditId ? 'id: $id, ' : ''}id_rekam_medis: $id_rekam_medis, id_dokter: $id_dokter, tanggal_kunjungan: $tanggal_kunjungan, keluhan: $keluhan, tekanan_darah: $tekanan_darah, berat_badan: $berat_badan) {
+                  id_kunjungan
+                }
+              }
+            `,
+            variables
           })
         });
 
-        const result = await response.json();
+        const result = await res.json();
         if (result.errors) {
-          console.error(result.errors);
-          alert('❌ Gagal menyimpan: ' + result.errors[0].message);
-        } else {
-          form.reset();
-          loadKunjungan();
+          throw new Error(result.errors[0].message);
         }
+
+        closeModal();
+        loadKunjungan();
+        
+        // Show success message
+        const message = currentEditId ? 'Kunjungan berhasil diupdate!' : 'Kunjungan berhasil ditambahkan!';
+        showNotification(message, 'success');
+        
       } catch (err) {
-        console.error('❌ Error saat kirim:', err);
-        alert('❌ Terjadi kesalahan koneksi ke server.');
+        console.error('Error:', err);
+        showNotification('Gagal menyimpan data: ' + err.message, 'error');
       }
     });
 
+    // Delete function
+    async function confirmDelete() {
+      if (!deleteId) return;
+
+      try {
+        const res = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              mutation DeleteKunjungan($id: Int!) {
+                deleteKunjungan(id: $id)
+              }
+            `,
+            variables: { id: deleteId }
+          })
+        });
+
+        const result = await res.json();
+        if (result.errors) {
+          throw new Error(result.errors[0].message);
+        }
+
+        closeDeleteModal();
+        loadKunjungan();
+        showNotification('Kunjungan berhasil dihapus!', 'success');
+        
+      } catch (err) {
+        console.error('Error:', err);
+        showNotification('Gagal menghapus data: ' + err.message, 'error');
+      }
+    }
+
+    // Search and filter
+    function applyFilter() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filterType = document.getElementById('filterType').value;
+      
+      let filtered = allKunjungan;
+      
+      if (searchTerm) {
+        filtered = filtered.filter(item => 
+          item.id_kunjungan.toString().includes(searchTerm) ||
+          (item.keluhan && item.keluhan.toLowerCase().includes(searchTerm)) ||
+          (item.rawatInap?.diagnosa?.nama_diagnosa && item.rawatInap.diagnosa.nama_diagnosa.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      if (filterType) {
+        filtered = filtered.filter(item => {
+          if (filterType === 'rawat_jalan') return item.rawatJalan;
+          if (filterType === 'rawat_inap') return item.rawatInap;
+          return true;
+        });
+      }
+      
+      displayKunjungan(filtered);
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 animate-slide-in ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Event listeners
+    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    document.getElementById('filterType').addEventListener('change', applyFilter);
+
+    // Initialize
     loadKunjungan();
   </script>
 </body>

@@ -1,200 +1,726 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Rekam Medis Terintegrasi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rekam Medis</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Minimalis card style */
+    .rm-card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      transition: box-shadow 0.2s;
+    }
+    .rm-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .rm-label {
+      color: #374151;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .rm-section-title {
+      color: #22223b;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .rm-btn {
+      border-radius: 0.5rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+    }
+    .rm-btn-main {
+      background: #2563eb;
+      color: #fff;
+    }
+    .rm-btn-main:hover {
+      background: #1d4ed8;
+    }
+    .rm-btn-neutral {
+      background: #f3f4f6;
+      color: #222;
+      border: 1px solid #e5e7eb;
+    }
+    .rm-btn-neutral:hover {
+      background: #e5e7eb;
+    }
+    .rm-btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+    .rm-btn-danger:hover {
+      background: #dc2626;
+    }
+    .rm-badge {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 0.5rem;
+      padding: 0.1rem 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <div class="max-w-6xl mx-auto p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Data Rekam Medis & Pasien</h1>
-      <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">+ Tambah Rekam Medis</button>
-    </div>
-    <div id="rekamMedisList" class="space-y-4"></div>
-  </div>
+<body class="bg-gray-100 p-6">
+  <h1 class="text-3xl font-bold mb-6">Daftar Rekam Medis</h1>
 
-  <!-- Modal -->
-  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-      <h2 id="modalTitle" class="text-xl font-semibold mb-4">Tambah Rekam Medis</h2>
-      <form id="rekamForm" class="space-y-4">
-        <input type="hidden" name="id" />
-        <select name="id_pasien" class="w-full border px-3 py-2 rounded">
-          <option value="">Loading...</option>
-        </select>
-        <input type="text" name="golongan_darah" placeholder="Golongan Darah" required class="w-full border px-3 py-2 rounded" />
-        <input type="text" name="alergi" placeholder="Alergi" class="w-full border px-3 py-2 rounded" />
-        <input type="text" name="riwayat_penyakit" placeholder="Riwayat Penyakit" class="w-full border px-3 py-2 rounded" />
-        <input type="text" name="catatan_dokter" placeholder="Catatan Dokter" class="w-full border px-3 py-2 rounded" />
-        <select name="status" required class="w-full border px-3 py-2 rounded">
-          <option value="">Pilih Status</option>
+  <button onclick="document.getElementById('modalRM').classList.remove('hidden')"
+    class="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+    + Tambah Rekam Medis
+  </button>
+
+  <div id="loading">Loading...</div>
+
+  <div id="modalRM" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Tambah Rekam Medis</h2>
+        <button onclick="document.getElementById('modalRM').classList.add('hidden')" class="text-gray-500">&times;</button>
+      </div>
+      <form id="formTambahRM" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium">Pasien</label>
+          <select id="pasienSelect" name="pasien" required class="w-full mt-1 border rounded p-2"></select>
+        </div>
+        <input type="text" name="golongan_darah" placeholder="Golongan Darah" class="w-full border p-2 rounded" />
+        <input type="text" name="alergi" placeholder="Alergi" class="w-full border p-2 rounded" />
+        <input type="text" name="riwayat_penyakit" placeholder="Riwayat Penyakit" class="w-full border p-2 rounded" />
+        <textarea name="catatan_dokter" placeholder="Catatan Dokter" class="w-full border p-2 rounded"></textarea>
+        <select name="status" required class="w-full border p-2 rounded">
           <option value="aktif">Aktif</option>
           <option value="nonaktif">Nonaktif</option>
         </select>
-        <div class="flex justify-end gap-3">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Batal</button>
-          <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Simpan</button>
+        <div class="flex justify-end">
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
+  <div id="editModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div class="bg-white p-6 rounded shadow max-w-md w-full"> <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Edit Rekam Medis</h2>
+          <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-500">&times;</button>
+        </div>
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="editId">
+
+          <div>
+            <label for="editTanggalDibuat" class="block text-sm font-medium">Tanggal Dibuat:</label>
+            <input type="date" id="editTanggalDibuat" class="w-full mt-1 border rounded p-2">
+          </div>
+
+          <div>
+            <label for="editGolonganDarah" class="block text-sm font-medium">Golongan Darah:</label>
+            <input type="text" id="editGolonganDarah" class="w-full mt-1 border rounded p-2" placeholder="Golongan Darah">
+          </div>
+
+          <div>
+            <label for="editAlergi" class="block text-sm font-medium">Alergi:</label>
+            <input type="text" id="editAlergi" class="w-full mt-1 border rounded p-2" placeholder="Alergi">
+          </div>
+
+          <div>
+            <label for="editRiwayatPenyakit" class="block text-sm font-medium">Riwayat Penyakit:</label>
+            <input type="text" id="editRiwayatPenyakit" class="w-full mt-1 border rounded p-2" placeholder="Riwayat Penyakit">
+          </div>
+
+          <div>
+            <label for="editCatatanDokter" class="block text-sm font-medium">Catatan Dokter:</label>
+            <textarea id="editCatatanDokter" class="w-full mt-1 border rounded p-2" placeholder="Catatan Dokter"></textarea>
+          </div>
+
+          <div>
+            <label for="editStatus" class="block text-sm font-medium">Status:</label>
+            <select id="editStatus" class="w-full mt-1 border rounded p-2">
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button type="button" id="cancelEdit" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Batal</button>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
+          </div>
+        </form>
+      </div>
+  </div>
+
+  <div id="editKunjunganModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-4 rounded shadow w-96">
+      <h2 class="text-lg font-bold mb-2">Edit Kunjungan</h2>
+      <form id="editKunjunganForm">
+        <input type="hidden" id="editKunjunganId">
+        <div class="mb-2">
+          <label for="editKunjunganTanggal" class="block">Tanggal Kunjungan:</label>
+          <input type="date" id="editKunjunganTanggal" class="w-full border p-1 rounded">
+        </div>
+        <div class="mb-2">
+          <label for="editKunjunganKeluhan" class="block">Keluhan:</label>
+          <input type="text" id="editKunjunganKeluhan" class="w-full border p-1 rounded">
+        </div>
+        <div class="mb-2">
+          <label for="editKunjunganTekananDarah" class="block">Tekanan Darah:</label>
+          <input type="text" id="editKunjunganTekananDarah" class="w-full border p-1 rounded">
+        </div>
+        <div class="mb-2">
+          <label for="editKunjunganBeratBadan" class="block">Berat Badan (kg):</label>
+          <input type="number" step="0.1" id="editKunjunganBeratBadan" class="w-full border p-1 rounded">
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" id="cancelEditKunjungan" class="bg-gray-400 px-3 py-1 rounded">Batal</button>
+          <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="rekamMedisList" class="space-y-6"></div>
+
   <script>
-    const modal = document.getElementById('modal');
-    const form = document.getElementById('rekamForm');
-    const titleEl = document.getElementById('modalTitle');
+    let allRecords = []; // Variabel global untuk menyimpan data rekam medis
 
-    function openModal(data = null) {
-      titleEl.textContent = data ? 'Edit Rekam Medis' : 'Tambah Rekam Medis';
-      ['id','id_pasien','golongan_darah','alergi','riwayat_penyakit','catatan_dokter','status']
-        .forEach(field => form[field].value = data ? data[field] || '' : '');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      fetchPasienDropdown();
+    document.getElementById('loading').classList.remove('hidden');
+    fetchRekamMedis().finally(() => {
+      document.getElementById('loading').classList.add('hidden');
+    });
+
+    async function fetchPasienOptions() {
+  const select = document.getElementById('pasienSelect');
+  select.innerHTML = '<option value="">Pilih Pasien</option>'; // Bersihkan opsi sebelumnya dan tambahkan opsi default
+
+  const existingPasienIds = new Set();
+      // allRecords adalah variabel global yang diisi oleh fetchRekamMedis()
+      allRecords.forEach(rm => {
+        if (rm.pasien && rm.pasien.id) {
+          existingPasienIds.add(String(rm.pasien.id));
+        }
+      });
+      console.log("DEBUG: existingPasienIds yang terkumpul:", existingPasienIds);
+      const res = await fetch('http://localhost:8000/graphql', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `{ getAllPasien { id nama } }` })
+      });
+
+      const { data, errors } = await res.json(); 
+
+      if (errors) {
+        console.error("GraphQL Error fetching Pasien:", errors);
+        alert("Terjadi error saat mengambil daftar pasien.");
+        return;
+      }
+
+      if (data && data.getAllPasien) {
+        console.log("DEBUG: Semua Pasien dari database:", data.getAllPasien);
+        data.getAllPasien.forEach(p => {
+          // Perbandingan juga harus konsisten dengan tipe ID yang digunakan di Set
+          if (!existingPasienIds.has(String(p.id))) { // <--- Gunakan String() di sini juga
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nama;
+            select.appendChild(opt);
+          } else {
+            console.log(`DEBUG: Pasien "${p.nama}" (ID: ${p.id}) diabaikan karena sudah punya Rekam Medis.`);
+          }
+        });
+      }
     }
 
-    function closeModal() {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
+    async function submitRekamMedis(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const input = {
+        id_pasien: parseInt(formData.get('pasien')),
+        golongan_darah: formData.get('golongan_darah'),
+        tanggal_dibuat: new Date().toISOString(),
+        alergi: formData.get('alergi'),
+        riwayat_penyakit: formData.get('riwayat_penyakit'),
+        catatan_dokter: formData.get('catatan_dokter'),
+        status: formData.get('status')
+      };
 
-    async function fetchPasienDropdown() {
-      const res = await fetch('http://localhost:8001/graphql', {
+      await fetch('http://localhost:8001/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: `query {
-            getAllPasien {
-              id
-              nama
+          query: `
+            mutation TambahRekamMedis($input: RekamMedisInput!) {
+              tambahRekamMedis(input: $input) {
+                id
+              }
             }
-          }`
+          `,
+          variables: { input }
         })
       });
+      alert('Rekam medis berhasil ditambahkan!');
 
-      const data = await res.json();
-      const select = document.querySelector('select[name="id_pasien"]');
-      select.innerHTML = '<option value="">Pilih Pasien</option>';
-      data.data.getAllPasien.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id; // yang dikirim nanti tetap ID
-        opt.textContent = p.nama; // yang ditampilkan di UI
-        select.appendChild(opt);
-      });
+      form.reset();
+      document.getElementById('modalRM').classList.add('hidden');
+      fetchRekamMedis();
     }
+
+    document.getElementById('formTambahRM').addEventListener('submit', submitRekamMedis);
 
     async function fetchRekamMedis() {
       const res = await fetch('http://localhost:8001/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: `query {
-            getRekamDanPasienById(id_pasien: 1) {
-              pasien { id nama nik }
-              rekamMedis {
-                id id_pasien golongan_darah alergi status tanggal_dibuat
+          query: `
+            query {
+              getAllRekamMedis {
+                id
+                tanggal_dibuat
+                golongan_darah
+                alergi
+                riwayat_penyakit
+                catatan_dokter
+                status
+                pasien { id nama tanggal_lahir }
+                kunjungan {
+                  id_kunjungan
+                  tanggal_kunjungan
+                  keluhan
+                  tekanan_darah
+                  berat_badan
+                  id_rekam_medis
+                  rawatJalan {
+                    tanggal_kunjungan
+                    keluhan
+                    catatan_dokter
+                    status
+                    diagnosa {
+                      nama_diagnosa
+                      kode_icd10
+                    }
+                  }
+                  rawatInap {
+                    kamar
+                    tanggal_masuk
+                    tanggal_keluar
+                    diagnosa {
+                      nama_diagnosa
+                      kode_icd10
+                    }
+                  }
+                }
               }
             }
-          }`
+          `
         })
       });
-      const { data } = await res.json();
-      const { pasien, rekamMedis } = data.getRekamDanPasienById;
+
+      const result = await res.json();
+      console.log("FETCH RESULT:", result);
+
+      if (result.errors) {
+        console.error("GraphQL Error:", result.errors);
+        alert("Terjadi error saat ambil data rekam medis!");
+        return;
+      }
+
+      allRecords = result.data.getAllRekamMedis;
       const list = document.getElementById('rekamMedisList');
-      list.innerHTML = `<div class="bg-white p-4 rounded-lg shadow">
-        <p class="font-semibold">Pasien: ${pasien.nama} (NIK: ${pasien.nik})</p>
-      </div>`;
-      rekamMedis.forEach(rm => {
+      list.innerHTML = '';
+
+      allRecords.forEach(rm => {
+        const pasien = rm.pasien || { nama: '-', tanggal_lahir: '-' };
+
+        const kunjunganHTML = rm.kunjungan.map(k => {
+          const rawatJalanDiagnosaHTML = (k.rawatJalan && k.rawatJalan.diagnosa && Array.isArray(k.rawatJalan.diagnosa)
+              ? k.rawatJalan.diagnosa.map(d => `<li>${d.nama_diagnosa} (${d.icd10_code || d.kode_icd10})</li>`).join('')
+              : (k.rawatJalan && k.rawatJalan.diagnosa ? `<li>${k.rawatJalan.diagnosa.nama_diagnosa || '-'} (${k.rawatJalan.diagnosa.icd10_code || k.rawatJalan.diagnosa.kode_icd10 || '-'})</li>` : '')
+          );
+
+          // Format tanggal kunjungan agar sesuai dengan input type="date"
+          const formattedTanggalKunjungan = k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toISOString().split('T')[0] : '';
+
+
+          return `
+            <div class="mt-2 ml-4 p-4 bg-gray-50 rounded-md border border-gray-300">
+              <div class="flex justify-between items-center">
+                <p class="font-semibold">Kunjungan (${k.tanggal_kunjungan})</p>
+                <div class="space-x-2">
+                  <button class="edit-kunjungan-btn text-sm text-blue-600 hover:underline"
+                          data-rm-id="${rm.id}"
+                          data-kunjungan-id="${k.id_kunjungan}"
+                          data-tanggal="${formattedTanggalKunjungan}"
+                          data-keluhan="${k.keluhan || ''}"
+                          data-tekanan-darah="${k.tekanan_darah || ''}"
+                          data-berat-badan="${k.berat_badan || ''}">Edit</button>
+                  <button class="delete-kunjungan-btn text-sm text-red-600 hover:underline"
+                          data-kunjungan-id="${k.id_kunjungan}">Hapus</button>
+                </div>
+              </div>
+              <p>Keluhan: ${k.keluhan || '-'}</p>
+              <p>Tekanan Darah: ${k.tekanan_darah || '-'}</p>
+              <p>Berat Badan: ${k.berat_badan || '-'} kg</p>
+
+              ${k.rawatJalan ? `
+                <div class="ml-4 mt-2 p-3 border-l-4 border-blue-500 bg-blue-50">
+                  <p class="font-semibold text-blue-700">Rawat Jalan</p>
+                  <p>Catatan: ${k.rawatJalan.catatan_dokter || '-'}</p>
+                  <p>Status: ${k.rawatJalan.status || '-'}</p>
+                  <p>Diagnosa:</p>
+                  <ul class="list-disc list-inside">
+                    ${rawatJalanDiagnosaHTML || '<li>Tidak ada diagnosa</li>'}
+                  </ul>
+                </div>` : ''}
+
+              ${k.rawatInap ? `
+                <div class="ml-4 mt-2 p-3 border-l-4 border-green-500 bg-green-50">
+                  <p class="font-semibold text-green-700">Rawat Inap</p>
+                  <p>Kamar: ${k.rawatInap.kamar || '-'}</p>
+                  <p>Masuk: ${k.rawatInap.tanggal_masuk || '-'}, Keluar: ${k.rawatInap.tanggal_keluar || '-'}</p>
+                  <p>Diagnosa: ${k.rawatInap.diagnosa?.nama_diagnosa || '-'} (${k.rawatInap.diagnosa?.kode_icd10 || '-'})</p>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+
         list.innerHTML += `
-          <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-            <div>
-              <p><strong>#${rm.id}</strong> Tanggal: ${rm.tanggal_dibuat}</p>
-              <p>Gol. Darah: ${rm.golongan_darah} • Alergi: ${rm.alergi}</p>
-              <p>Status: <span class="font-semibold">${rm.status}</span></p>
-            </div>
-            <div class="space-x-2">
-              <button onclick="openModal(${JSON.stringify(rm)})" class="text-blue-600 hover:underline">Edit</button>
-              <button onclick="deleteRekam(${rm.id})" class="text-red-600 hover:underline">Hapus</button>
-            </div>
-          </div>`;
+  <div class="rm-card p-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <div class="text-lg font-bold text-gray-800">${pasien.nama}</div>
+        <div class="text-sm text-gray-500">Tanggal Lahir: ${pasien.tanggal_lahir}</div>
+      </div>
+      <div class="space-x-2">
+        <button class="edit-rm-btn rm-btn rm-btn-neutral text-sm px-3 py-1" data-id="${rm.id}" data-status="${rm.status}">Edit RM</button>
+        <button class="delete-rm-btn rm-btn rm-btn-danger text-sm px-3 py-1" data-id="${rm.id}">Hapus RM</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 text-sm mt-2">
+      <div><span class="rm-label">Gol. Darah:</span> ${rm.golongan_darah || '-'}</div>
+      <div><span class="rm-label">Alergi:</span> ${rm.alergi || '-'}</div>
+      <div><span class="rm-label">Riwayat Penyakit:</span> ${rm.riwayat_penyakit || '-'}</div>
+      <div>
+        <span class="rm-label">Status:</span>
+        <span class="rm-badge">${rm.status}</span>
+      </div>
+      <div class="col-span-2"><span class="rm-label">Catatan Dokter:</span> ${rm.catatan_dokter || '-'}</div>
+    </div>
+    <div class="mt-4">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm font-semibold text-gray-700">Kunjungan:</p>
+        <button onclick="showForm('${rm.id}')" class="rm-btn rm-btn-main text-sm px-3 py-1">
+          + Kunjungan
+        </button>
+      </div>
+      ${kunjunganHTML || '<p class="text-gray-400">Belum ada kunjungan</p>'}
+      <div id="form-${rm.id}" class="hidden mt-4 border p-4 rounded bg-white shadow"></div>
+    </div>
+  </div>`;
       });
+
+      fetchPasienOptions();
+      attachEventListeners(); // Panggil fungsi untuk memasang event listener setelah konten dimuat
     }
 
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form));
-      const isEdit = !!data.id;
-      const query = isEdit
-      ? `mutation($id: Int!, $tanggal_dibuat: String, $golongan_darah: String, $alergi: String, $riwayat_penyakit: String, $catatan_dokter: String, $status: String) {
-          updateRekamMedis(
-            id: $id,
-            tanggal_dibuat: $tanggal_dibuat,
-            golongan_darah: $golongan_darah,
-            alergi: $alergi,
-            riwayat_penyakit: $riwayat_penyakit,
-            catatan_dokter: $catatan_dokter,
-            status: $status
-          ) {
-            id
-          }
-        }`
-      : `mutation($input: RekamMedisInput!) {
-          tambahRekamMedis(input: $input) {
-            id
-          }
-        }`;
+    function showForm(rekamMedisId) {
+      document.querySelectorAll(`[id^="form-"]`).forEach(f => f.classList.add('hidden'));
+      const container = document.getElementById(`form-${rekamMedisId}`);
+      container.innerHTML = `
+        <h3 class="text-md font-semibold mb-2">Tambah Kunjungan</h3>
+        <form onsubmit="submitKunjungan(event, '${rekamMedisId}')">
+          <input type="date" name="tanggal_kunjungan" required class="mb-2 p-2 border rounded w-full" />
+          <input type="text" name="keluhan" required class="mb-2 p-2 border rounded w-full" placeholder="Keluhan" />
+          <input type="text" name="tekanan_darah" class="mb-2 p-2 border rounded w-full" placeholder="Tekanan Darah" />
+          <input type="number" step="0.1" name="berat_badan" class="mb-2 p-2 border rounded w-full" placeholder="Berat Badan (kg)" />
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+        </form>
+      `;
+      container.classList.remove("hidden");
+    }
 
-      const vars = isEdit
-      ? {
-          id: +data.id,
-          tanggal_dibuat: new Date().toISOString(),
-          golongan_darah: data.golongan_darah,
-          alergi: data.alergi,
-          riwayat_penyakit: data.riwayat_penyakit,
-          catatan_dokter: data.catatan_dokter,
-          status: data.status
-        }
-      : {
-          input: {
-            id_pasien: form.id_pasien.value,
-            tanggal_dibuat: new Date().toISOString(),
-            golongan_darah: data.golongan_darah,
-            alergi: data.alergi,
-            riwayat_penyakit: data.riwayat_penyakit,
-            catatan_dokter: data.catatan_dokter,
-            status: data.status
-          }
-        };
+    async function submitKunjungan(event, rekamMedisId) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
 
+      const idRekamMedisInt = parseInt(rekamMedisId);
+      if (isNaN(idRekamMedisInt)) {
+          alert('ID Rekam Medis tidak valid.');
+          return;
+      }
 
-      await fetch('http://localhost:8001/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, variables: vars })
-      });
+      const inputKunjungan = {
+        id_rekam_medis: idRekamMedisInt,
+        tanggal_kunjungan: formData.get('tanggal_kunjungan'),
+        keluhan: formData.get('keluhan'),
+        tekanan_darah: formData.get('tekanan_darah'),
+        berat_badan: parseFloat(formData.get('berat_badan')),
+      };
 
-      closeModal();
-      fetchRekamMedis();
-    });
+      if (isNaN(inputKunjungan.berat_badan)) {
+          inputKunjungan.berat_badan = 0;
+      }
 
-    async function deleteRekam(id) {
-      if(!confirm('Yakin hapus rekam medis #' + id + '?')) return;
-      await fetch('http://localhost:8001/graphql', {
+      const res = await fetch('http://localhost:8001/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: `mutation($id: Int!) {
-            hapusRekamMedis(id: $id)
-          }`,
-          variables: { id: +id }
+          query: `
+            mutation AddKunjungan($input: KunjunganInput!) {
+              addKunjungan(input: $input) {
+                id_kunjungan
+              }
+            }
+          `,
+          variables: { input: inputKunjungan }
         })
       });
-      fetchRekamMedis();
+
+      const result = await res.json();
+      console.log("Add Kunjungan Result:", result);
+
+      if (result.data?.addKunjungan) {
+        alert('Kunjungan berhasil ditambahkan!');
+        document.getElementById(`form-${rekamMedisId}`).classList.add('hidden');
+        fetchRekamMedis();
+      } else {
+        alert('Gagal menambahkan kunjungan. Silakan cek konsol untuk detailnya.');
+        console.error("GraphQL Error adding Kunjungan:", result.errors || result);
+      }
     }
 
-    fetchRekamMedis();
+    // --- Aksi untuk Rekam Medis (Sudah ada di versi sebelumnya) ---
+    function attachEventListeners() {
+      document.querySelectorAll('.edit-rm-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+              const id = e.target.dataset.id;
+              // Temukan rekam medis yang sesuai dari allRecords
+              const rekamMedisToEdit = allRecords.find(rm => rm.id === id);
+
+              if (rekamMedisToEdit) {
+                  // Isi input hidden ID
+                  document.getElementById('editId').value = rekamMedisToEdit.id;
+
+                  // Isi semua input field dengan data yang sudah ada
+                  // Pastikan format tanggal_dibuat sesuai untuk input type="date" (YYYY-MM-DD)
+                  const tanggalDibuatFormatted = rekamMedisToEdit.tanggal_dibuat ? new Date(rekamMedisToEdit.tanggal_dibuat).toISOString().split('T')[0] : '';
+                  document.getElementById('editTanggalDibuat').value = tanggalDibuatFormatted;
+
+                  document.getElementById('editGolonganDarah').value = rekamMedisToEdit.golongan_darah || '';
+                  document.getElementById('editAlergi').value = rekamMedisToEdit.alergi || '';
+                  document.getElementById('editRiwayatPenyakit').value = rekamMedisToEdit.riwayat_penyakit || '';
+                  document.getElementById('editCatatanDokter').value = rekamMedisToEdit.catatan_dokter || '';
+                  document.getElementById('editStatus').value = rekamMedisToEdit.status || ''; // Pastikan ini juga terisi
+
+                  // Tampilkan modal edit
+                  document.getElementById('editModal').classList.remove('hidden');
+              } else {
+                  alert('Data rekam medis tidak ditemukan untuk ID ini.');
+                  console.error('Rekam Medis dengan ID', id, 'tidak ditemukan di allRecords.');
+              }
+          });
+      });
+
+        // Event Listener untuk tombol Hapus RM (dengan class delete-rm-btn)
+        document.querySelectorAll('.delete-rm-btn').forEach((btn) => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            const confirmDelete = confirm('Yakin ingin menghapus data rekam medis ID ' + id + '?');
+
+            if (!confirmDelete) return;
+
+            const res = await fetch("http://localhost:8001/graphql", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `
+                  mutation($id: Int!) {
+                    hapusRekamMedis(id: $id)
+                  }
+                `,
+                variables: { id: parseInt(id) }
+              })
+            });
+
+            const result = await res.json();
+            if (result.data?.hapusRekamMedis) {
+              alert("Data rekam medis berhasil dihapus!");
+              fetchRekamMedis();
+            } else {
+              alert("Gagal menghapus data rekam medis.");
+              console.error(result.errors || result);
+            }
+          });
+        });
+
+        // --- Aksi BARU untuk Kunjungan ---
+
+        // Event Listener untuk tombol Edit Kunjungan (dengan class edit-kunjungan-btn)
+        document.querySelectorAll('.edit-kunjungan-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            const kunjunganId = e.target.dataset.kunjunganId;
+            const tanggal = e.target.dataset.tanggal;
+            const keluhan = e.target.dataset.keluhan;
+            const tekananDarah = e.target.dataset.tekananDarah;
+            const beratBadan = e.target.dataset.beratBadan;
+
+            document.getElementById('editKunjunganId').value = kunjunganId;
+            document.getElementById('editKunjunganTanggal').value = tanggal;
+            document.getElementById('editKunjunganKeluhan').value = keluhan;
+            document.getElementById('editKunjunganTekananDarah').value = tekananDarah;
+            document.getElementById('editKunjunganBeratBadan').value = beratBadan;
+
+            document.getElementById('editKunjunganModal').classList.remove('hidden');
+          });
+        });
+
+        // Event Listener untuk tombol Hapus Kunjungan (dengan class delete-kunjungan-btn)
+        document.querySelectorAll('.delete-kunjungan-btn').forEach((btn) => {
+          btn.addEventListener('click', async (e) => {
+            const kunjunganId = e.target.dataset.kunjunganId;
+            const confirmDelete = confirm('Yakin ingin menghapus kunjungan ID ' + kunjunganId + '?');
+
+            if (!confirmDelete) return;
+
+            const res = await fetch("http://localhost:8001/graphql", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `
+                  mutation($id_kunjungan: Int!) {
+                    hapusKunjungan(id_kunjungan: $id_kunjungan)
+                  }
+                `,
+                variables: { id_kunjungan: parseInt(kunjunganId) }
+              })
+            });
+
+            const result = await res.json();
+            if (result.data?.hapusKunjungan) {
+              alert("Kunjungan berhasil dihapus!");
+              fetchRekamMedis(); // Perbarui daftar setelah penghapusan
+            } else {
+              alert("Gagal menghapus kunjungan.");
+              console.error(result.errors || result);
+            }
+          });
+        });
+    }
+
+    // Batal edit Rekam Medis
+    document.getElementById('cancelEdit').addEventListener('click', () => {
+      document.getElementById('editModal').classList.add('hidden');
+    });
+
+    // Submit edit form Rekam Medis
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = parseInt(document.getElementById('editId').value);
+      // Ambil nilai dari semua field input di form edit
+      const tanggal_dibuat = document.getElementById('editTanggalDibuat').value;
+      const golongan_darah = document.getElementById('editGolonganDarah').value;
+      const alergi = document.getElementById('editAlergi').value;
+      const riwayat_penyakit = document.getElementById('editRiwayatPenyakit').value;
+      const catatan_dokter = document.getElementById('editCatatanDokter').value;
+      const status = document.getElementById('editStatus').value;
+
+      const inputRekamMedis = {
+        id: id,
+        tanggal_dibuat: tanggal_dibuat || null,
+        golongan_darah: golongan_darah || null,
+        alergi: alergi || null,
+        riwayat_penyakit: riwayat_penyakit || null,
+        catatan_dokter: catatan_dokter || null,
+        status: status || null
+      };
+
+      const res = await fetch("http://localhost:8001/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            mutation UpdateRekamMedis($input: UpdateRekamMedisInput!) {
+              updateRekamMedis(input: $input) {
+                id
+                tanggal_dibuat
+                golongan_darah
+                alergi
+                riwayat_penyakit
+                catatan_dokter
+                status
+              }
+            }
+          `,
+          variables: { input: inputRekamMedis }
+        })
+      });
+
+      const result = await res.json();
+      if (result.data?.updateRekamMedis) {
+        alert("Data rekam medis berhasil diperbarui!");
+        document.getElementById('editModal').classList.add('hidden');
+        fetchRekamMedis(); // Memperbarui tampilan data di halaman
+      } else {
+        alert("Gagal update data rekam medis. Silakan cek konsol untuk detailnya.");
+        console.error(result.errors || result);
+      }
+    });
+
+    // Batal edit Kunjungan BARU
+    document.getElementById('cancelEditKunjungan').addEventListener('click', () => {
+      document.getElementById('editKunjunganModal').classList.add('hidden');
+    });
+
+    // Submit edit form Kunjungan BARU
+    document.getElementById('editKunjunganForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id_kunjungan = parseInt(document.getElementById('editKunjunganId').value);
+      const tanggal_kunjungan = document.getElementById('editKunjunganTanggal').value;
+      const keluhan = document.getElementById('editKunjunganKeluhan').value;
+      const tekanan_darah = document.getElementById('editKunjunganTekananDarah').value;
+      const berat_badan = parseFloat(document.getElementById('editKunjunganBeratBadan').value);
+
+      const inputKunjunganUpdate = {
+          id_kunjungan, // ID kunjungan yang akan diupdate
+          tanggal_kunjungan,
+          keluhan,
+          tekanan_darah,
+          berat_badan: isNaN(berat_badan) ? 0 : berat_badan // Handle NaN for berat_badan
+      };
+
+      const res = await fetch("http://localhost:8001/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            mutation UpdateKunjungan($input: UpdateKunjunganInput!) {
+              updateKunjungan(input: $input) {
+                id_kunjungan
+                tanggal_kunjungan
+                keluhan
+              }
+            }
+          `,
+          variables: { input: inputKunjunganUpdate }
+        })
+      });
+
+      const result = await res.json();
+      if (result.data?.updateKunjungan) {
+        alert("Data kunjungan berhasil diperbarui!");
+        document.getElementById('editKunjunganModal').classList.add('hidden');
+        fetchRekamMedis();
+      } else {
+        alert("Gagal update data kunjungan. Silakan cek konsol.");
+        console.error(result.errors || result);
+      }
+    });
+
+    fetchRekamMedis(); // Panggil fungsi ini untuk pertama kali saat halaman dimuat
   </script>
 </body>
 </html>
