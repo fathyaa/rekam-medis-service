@@ -57,11 +57,10 @@ Secara default akan berjalan di: `http://localhost:8000`
 
 ## 🧠 Fitur Utama
 
-- 🔎 Lihat daftar rekam medis
-- ➕ Tambah rekam medis baru
-- ✏️ Edit dan hapus rekam medis
-- 🔍 Pencarian berdasarkan nama pasien
-- 📡 Integrasi data kunjungan, rawat jalan, rawat inap (via service eksternal)
+- 🔎 Lihat daftar rekam medis beserta daftar kunjungannya
+- ➕ Tambah rekam medis & kunjungan baru 
+- ✏️ Edit dan hapus rekam medis & kunjungan
+- 📡 Integrasi data pasien, kunjungan, rawat jalan, rawat inap (via service eksternal)
 - 🧬 GraphQL API untuk akses data dinamis
 
 ---
