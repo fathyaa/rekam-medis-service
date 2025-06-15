@@ -5,185 +5,175 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rekam Medis</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Minimalis card style */
-    .rm-card {
-      border-radius: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border: 1px solid #e5e7eb;
-      background: #fff;
-      transition: box-shadow 0.2s;
-    }
-    .rm-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    }
-    .rm-label {
-      color: #374151;
-      font-weight: 500;
-      font-size: 0.95rem;
-    }
-    .rm-section-title {
-      color: #22223b;
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .rm-btn {
-      border-radius: 0.5rem;
-      font-weight: 500;
-      transition: background 0.2s, color 0.2s;
-    }
-    .rm-btn-main {
-      background: #2563eb;
-      color: #fff;
-    }
-    .rm-btn-main:hover {
-      background: #1d4ed8;
-    }
-    .rm-btn-neutral {
-      background: #f3f4f6;
-      color: #222;
-      border: 1px solid #e5e7eb;
-    }
-    .rm-btn-neutral:hover {
-      background: #e5e7eb;
-    }
-    .rm-btn-danger {
-      background: #ef4444;
-      color: #fff;
-    }
-    .rm-btn-danger:hover {
-      background: #dc2626;
-    }
-    .rm-badge {
-      background: #f3f4f6;
-      color: #374151;
-      border-radius: 0.5rem;
-      padding: 0.1rem 0.7rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-left: 0.5rem;
-    }
-  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-100 p-6">
-  <h1 class="text-3xl font-bold mb-6">Daftar Rekam Medis</h1>
+</head>
+<body class="bg-gray-50 font-sans leading-normal tracking-normal p-6">
 
-  <button onclick="document.getElementById('modalRM').classList.remove('hidden')"
-    class="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-    + Tambah Rekam Medis
-  </button>
-
-  <div id="loading">Loading...</div>
-
-  <div id="modalRM" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white p-6 rounded shadow max-w-md w-full">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Tambah Rekam Medis</h2>
-        <button onclick="document.getElementById('modalRM').classList.add('hidden')" class="text-gray-500">&times;</button>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">Daftar Rekam Medis</h1>
+      <div class="mb-6 flex flex-col md:flex-row items-center gap-4">
+        <input type="number" id="searchPasienId" placeholder="Cari berdasarkan ID Pasien..."
+               class="w-full md:w-auto flex-grow border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" />
+        <button id="searchButton"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+          Cari
+        </button>
+        <button id="clearSearchButton"
+                class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out hidden">
+          Tampilkan Semua
+        </button>
       </div>
-      <form id="formTambahRM" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium">Pasien</label>
-          <select id="pasienSelect" name="pasien" required class="w-full mt-1 border rounded p-2"></select>
-        </div>
-        <input type="text" name="golongan_darah" placeholder="Golongan Darah" class="w-full border p-2 rounded" />
-        <input type="text" name="alergi" placeholder="Alergi" class="w-full border p-2 rounded" />
-        <input type="text" name="riwayat_penyakit" placeholder="Riwayat Penyakit" class="w-full border p-2 rounded" />
-        <textarea name="catatan_dokter" placeholder="Catatan Dokter" class="w-full border p-2 rounded"></textarea>
-        <select name="status" required class="w-full border p-2 rounded">
-          <option value="aktif">Aktif</option>
-          <option value="nonaktif">Nonaktif</option>
-        </select>
-        <div class="flex justify-end">
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <div id="editModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div class="bg-white p-6 rounded shadow max-w-md w-full"> <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold">Edit Rekam Medis</h2>
-          <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-500">&times;</button>
+    <div class="flex justify-end mb-6">
+      <button onclick="document.getElementById('modalRM').classList.remove('hidden'); fetchPasienOptions();"
+        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+        <span class="text-xl mr-2">+</span> Tambah Rekam Medis
+      </button>
+    </div>
+
+    <div id="loading" class="text-center text-gray-600 text-lg font-medium py-10">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mx-auto mb-3"></div>
+      Memuat data...
+    </div>
+
+    <div id="modalRM" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-95 opacity-0 duration-300"
+           x-data="{ showModal: false }"
+           x-init="setTimeout(() => { showModal = true }, 50)"
+           :class="{ 'scale-100 opacity-100': showModal }">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Tambah Rekam Medis Baru</h2>
+          <button onclick="document.getElementById('modalRM').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button>
         </div>
-        <form id="editForm" class="space-y-4">
+        <form id="formTambahRM" class="space-y-5">
+          <div>
+            <label for="pasienSelect" class="block text-sm font-medium text-gray-700 mb-1">Pasien</label>
+            <select id="pasienSelect" name="pasien" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5"></select>
+          </div>
+          <div>
+            <label for="golongan_darah" class="block text-sm font-medium text-gray-700 mb-1">Golongan Darah</label>
+            <input type="text" id="golongan_darah" name="golongan_darah" placeholder="Cth: A+, O-" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" />
+          </div>
+          <div>
+            <label for="alergi" class="block text-sm font-medium text-gray-700 mb-1">Alergi</label>
+            <input type="text" id="alergi" name="alergi" placeholder="Cth: Seafood, Debu" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" />
+          </div>
+          <div>
+            <label for="riwayat_penyakit" class="block text-sm font-medium text-gray-700 mb-1">Riwayat Penyakit</label>
+            <input type="text" id="riwayat_penyakit" name="riwayat_penyakit" placeholder="Cth: Hipertensi, Diabetes" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" />
+          </div>
+          <div>
+            <label for="catatan_dokter" class="block text-sm font-medium text-gray-700 mb-1">Catatan Dokter</label>
+            <textarea id="catatan_dokter" name="catatan_dokter" placeholder="Catatan atau observasi dokter" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5"></textarea>
+          </div>
+          <div>
+            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="status" name="status" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+          </div>
+          <div class="flex justify-end pt-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Simpan Rekam Medis</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full transform transition-all scale-95 opacity-0 duration-300"
+           x-data="{ showEditModal: false }"
+           x-init="setTimeout(() => { showEditModal = true }, 50)"
+           :class="{ 'scale-100 opacity-100': showEditModal }">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Edit Rekam Medis</h2>
+          <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button>
+        </div>
+        <form id="editForm" class="space-y-5">
           <input type="hidden" id="editId">
 
           <div>
-            <label for="editTanggalDibuat" class="block text-sm font-medium">Tanggal Dibuat:</label>
-            <input type="date" id="editTanggalDibuat" class="w-full mt-1 border rounded p-2">
+            <label for="editTanggalDibuat" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Dibuat:</label>
+            <input type="date" id="editTanggalDibuat" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
           </div>
 
           <div>
-            <label for="editGolonganDarah" class="block text-sm font-medium">Golongan Darah:</label>
-            <input type="text" id="editGolonganDarah" class="w-full mt-1 border rounded p-2" placeholder="Golongan Darah">
+            <label for="editGolonganDarah" class="block text-sm font-medium text-gray-700 mb-1">Golongan Darah:</label>
+            <input type="text" id="editGolonganDarah" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Golongan Darah">
           </div>
 
           <div>
-            <label for="editAlergi" class="block text-sm font-medium">Alergi:</label>
-            <input type="text" id="editAlergi" class="w-full mt-1 border rounded p-2" placeholder="Alergi">
+            <label for="editAlergi" class="block text-sm font-medium text-gray-700 mb-1">Alergi:</label>
+            <input type="text" id="editAlergi" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Alergi">
           </div>
 
           <div>
-            <label for="editRiwayatPenyakit" class="block text-sm font-medium">Riwayat Penyakit:</label>
-            <input type="text" id="editRiwayatPenyakit" class="w-full mt-1 border rounded p-2" placeholder="Riwayat Penyakit">
+            <label for="editRiwayatPenyakit" class="block text-sm font-medium text-gray-700 mb-1">Riwayat Penyakit:</label>
+            <input type="text" id="editRiwayatPenyakit" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Riwayat Penyakit">
           </div>
 
           <div>
-            <label for="editCatatanDokter" class="block text-sm font-medium">Catatan Dokter:</label>
-            <textarea id="editCatatanDokter" class="w-full mt-1 border rounded p-2" placeholder="Catatan Dokter"></textarea>
+            <label for="editCatatanDokter" class="block text-sm font-medium text-gray-700 mb-1">Catatan Dokter:</label>
+            <textarea id="editCatatanDokter" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Catatan Dokter"></textarea>
           </div>
 
           <div>
-            <label for="editStatus" class="block text-sm font-medium">Status:</label>
-            <select id="editStatus" class="w-full mt-1 border rounded p-2">
+            <label for="editStatus" class="block text-sm font-medium text-gray-700 mb-1">Status:</label>
+            <select id="editStatus" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
               <option value="aktif">Aktif</option>
               <option value="nonaktif">Nonaktif</option>
             </select>
           </div>
 
-          <div class="flex justify-end gap-2">
-            <button type="button" id="cancelEdit" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Batal</button>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" id="cancelEdit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Batal</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Simpan Perubahan</button>
           </div>
         </form>
       </div>
-  </div>
-
-  <div id="editKunjunganModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-4 rounded shadow w-96">
-      <h2 class="text-lg font-bold mb-2">Edit Kunjungan</h2>
-      <form id="editKunjunganForm">
-        <input type="hidden" id="editKunjunganId">
-        <div class="mb-2">
-          <label for="editKunjunganTanggal" class="block">Tanggal Kunjungan:</label>
-          <input type="date" id="editKunjunganTanggal" class="w-full border p-1 rounded">
-        </div>
-        <div class="mb-2">
-          <label for="editKunjunganKeluhan" class="block">Keluhan:</label>
-          <input type="text" id="editKunjunganKeluhan" class="w-full border p-1 rounded">
-        </div>
-        <div class="mb-2">
-          <label for="editKunjunganTekananDarah" class="block">Tekanan Darah:</label>
-          <input type="text" id="editKunjunganTekananDarah" class="w-full border p-1 rounded">
-        </div>
-        <div class="mb-2">
-          <label for="editKunjunganBeratBadan" class="block">Berat Badan (kg):</label>
-          <input type="number" step="0.1" id="editKunjunganBeratBadan" class="w-full border p-1 rounded">
-        </div>
-        <div class="flex justify-end gap-2">
-          <button type="button" id="cancelEditKunjungan" class="bg-gray-400 px-3 py-1 rounded">Batal</button>
-          <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Simpan</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <div id="rekamMedisList" class="space-y-6"></div>
+    <div id="editKunjunganModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full transform transition-all scale-95 opacity-0 duration-300"
+           x-data="{ showEditKunjunganModal: false }"
+           x-init="setTimeout(() => { showEditKunjunganModal = true }, 50)"
+           :class="{ 'scale-100 opacity-100': showEditKunjunganModal }">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Edit Kunjungan</h2>
+          <button onclick="document.getElementById('editKunjunganModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button>
+        </div>
+        <form id="editKunjunganForm" class="space-y-5">
+          <input type="hidden" id="editKunjunganId">
+          <div>
+            <label for="editKunjunganTanggal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kunjungan:</label>
+            <input type="date" id="editKunjunganTanggal" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
+          </div>
+          <div>
+            <label for="editKunjunganKeluhan" class="block text-sm font-medium text-gray-700 mb-1">Keluhan:</label>
+            <input type="text" id="editKunjunganKeluhan" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
+          </div>
+          <div>
+            <label for="editKunjunganTekananDarah" class="block text-sm font-medium text-gray-700 mb-1">Tekanan Darah:</label>
+            <input type="text" id="editKunjunganTekananDarah" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
+          </div>
+          <div>
+            <label for="editKunjunganBeratBadan" class="block text-sm font-medium text-gray-700 mb-1">Berat Badan (kg):</label>
+            <input type="number" step="0.1" id="editKunjunganBeratBadan" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5">
+          </div>
+          <div class="flex justify-end gap-3 pt-4">
+            <button type="button" id="cancelEditKunjungan" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Batal</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Simpan Perubahan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="rekamMedisList" class="space-y-8"></div>
+  </div>
 
   <script>
-    let allRecords = []; // Variabel global untuk menyimpan data rekam medis
+    let allRecords = [];
 
     document.getElementById('loading').classList.remove('hidden');
     fetchRekamMedis().finally(() => {
@@ -191,24 +181,23 @@
     });
 
     async function fetchPasienOptions() {
-  const select = document.getElementById('pasienSelect');
-  select.innerHTML = '<option value="">Pilih Pasien</option>'; // Bersihkan opsi sebelumnya dan tambahkan opsi default
+      const select = document.getElementById('pasienSelect');
+      select.innerHTML = '<option value="">Pilih Pasien</option>';
 
-  const existingPasienIds = new Set();
-      // allRecords adalah variabel global yang diisi oleh fetchRekamMedis()
+      const existingPasienIds = new Set();
       allRecords.forEach(rm => {
         if (rm.pasien && rm.pasien.id) {
           existingPasienIds.add(String(rm.pasien.id));
         }
       });
       console.log("DEBUG: existingPasienIds yang terkumpul:", existingPasienIds);
-      const res = await fetch('http://localhost:8000/graphql', { 
+      const res = await fetch('http://localhost:8000/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: `{ getAllPasien { id nama } }` })
       });
 
-      const { data, errors } = await res.json(); 
+      const { data, errors } = await res.json();
 
       if (errors) {
         console.error("GraphQL Error fetching Pasien:", errors);
@@ -219,8 +208,7 @@
       if (data && data.getAllPasien) {
         console.log("DEBUG: Semua Pasien dari database:", data.getAllPasien);
         data.getAllPasien.forEach(p => {
-          // Perbandingan juga harus konsisten dengan tipe ID yang digunakan di Set
-          if (!existingPasienIds.has(String(p.id))) { // <--- Gunakan String() di sini juga
+          if (!existingPasienIds.has(String(p.id))) {
             const opt = document.createElement('option');
             opt.value = p.id;
             opt.textContent = p.nama;
@@ -246,195 +234,239 @@
         status: formData.get('status')
       };
 
-      await fetch('http://localhost:8001/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            mutation TambahRekamMedis($input: RekamMedisInput!) {
-              tambahRekamMedis(input: $input) {
-                id
+      try {
+        const res = await fetch('http://localhost:8001/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              mutation TambahRekamMedis($input: RekamMedisInput!) {
+                tambahRekamMedis(input: $input) {
+                  id
+                }
               }
-            }
-          `,
-          variables: { input }
-        })
-      });
-      alert('Rekam medis berhasil ditambahkan!');
-
-      form.reset();
-      document.getElementById('modalRM').classList.add('hidden');
-      fetchRekamMedis();
+            `,
+            variables: { input }
+          })
+        });
+        const result = await res.json();
+        if (result.data?.tambahRekamMedis) {
+          alert('Rekam medis berhasil ditambahkan!');
+          form.reset();
+          document.getElementById('modalRM').classList.add('hidden');
+          fetchRekamMedis();
+        } else {
+          alert('Gagal menambahkan rekam medis. Silakan cek konsol untuk detailnya.');
+          console.error("GraphQL Error adding Rekam Medis:", result.errors || result);
+        }
+      } catch (error) {
+        console.error("Network or Fetch Error:", error);
+        alert("Terjadi masalah koneksi saat menambahkan rekam medis.");
+      }
     }
 
     document.getElementById('formTambahRM').addEventListener('submit', submitRekamMedis);
 
     async function fetchRekamMedis() {
-      const res = await fetch('http://localhost:8001/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query {
-              getAllRekamMedis {
-                id
-                tanggal_dibuat
-                golongan_darah
-                alergi
-                riwayat_penyakit
-                catatan_dokter
-                status
-                pasien { id nama tanggal_lahir }
-                kunjungan {
-                  id_kunjungan
-                  tanggal_kunjungan
-                  keluhan
-                  tekanan_darah
-                  berat_badan
-                  id_rekam_medis
-                  rawatJalan {
+      try {
+        const res = await fetch('http://localhost:8001/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query {
+                getAllRekamMedis {
+                  id
+                  tanggal_dibuat
+                  golongan_darah
+                  alergi
+                  riwayat_penyakit
+                  catatan_dokter
+                  status
+                  pasien { id nama tanggal_lahir }
+                  kunjungan {
+                    id_kunjungan
                     tanggal_kunjungan
                     keluhan
-                    catatan_dokter
-                    status
-                    diagnosa {
-                      nama_diagnosa
-                      kode_icd10
+                    tekanan_darah
+                    berat_badan
+                    id_rekam_medis
+                    rawatJalan {
+                      tanggal_kunjungan
+                      keluhan
+                      catatan_dokter
+                      status
+                      diagnosa {
+                        nama_diagnosa
+                        kode_icd10
+                      }
                     }
-                  }
-                  rawatInap {
-                    kamar
-                    tanggal_masuk
-                    tanggal_keluar
-                    diagnosa {
-                      nama_diagnosa
-                      kode_icd10
+                    rawatInap {
+                      kamar
+                      tanggal_masuk
+                      tanggal_keluar
+                      diagnosa {
+                        nama_diagnosa
+                        kode_icd10
+                      }
                     }
                   }
                 }
               }
-            }
-          `
-        })
-      });
+            `
+          })
+        });
 
-      const result = await res.json();
-      console.log("FETCH RESULT:", result);
+        const result = await res.json();
+        console.log("FETCH RESULT:", result);
 
-      if (result.errors) {
-        console.error("GraphQL Error:", result.errors);
-        alert("Terjadi error saat ambil data rekam medis!");
-        return;
-      }
+        if (result.errors) {
+          console.error("GraphQL Error:", result.errors);
+          alert("Terjadi error saat ambil data rekam medis!");
+          return;
+        }
 
-      allRecords = result.data.getAllRekamMedis;
-      const list = document.getElementById('rekamMedisList');
-      list.innerHTML = '';
+        allRecords = result.data.getAllRekamMedis;
+        const list = document.getElementById('rekamMedisList');
+        list.innerHTML = '';
 
-      allRecords.forEach(rm => {
-        const pasien = rm.pasien || { nama: '-', tanggal_lahir: '-' };
+        allRecords.forEach(rm => {
+          const pasien = rm.pasien || { nama: '-', tanggal_lahir: '-' };
+          const formattedTanggalLahir = pasien.tanggal_lahir ? new Date(pasien.tanggal_lahir).toLocaleDateString('id-ID') : '-';
 
-        const kunjunganHTML = rm.kunjungan.map(k => {
-          const rawatJalanDiagnosaHTML = (k.rawatJalan && k.rawatJalan.diagnosa && Array.isArray(k.rawatJalan.diagnosa)
-              ? k.rawatJalan.diagnosa.map(d => `<li>${d.nama_diagnosa} (${d.icd10_code || d.kode_icd10})</li>`).join('')
-              : (k.rawatJalan && k.rawatJalan.diagnosa ? `<li>${k.rawatJalan.diagnosa.nama_diagnosa || '-'} (${k.rawatJalan.diagnosa.icd10_code || k.rawatJalan.diagnosa.kode_icd10 || '-'})</li>` : '')
-          );
+          const kunjunganHTML = rm.kunjungan.map(k => {
+            const rawatJalanDiagnosaHTML = (k.rawatJalan && k.rawatJalan.diagnosa && Array.isArray(k.rawatJalan.diagnosa)
+                ? k.rawatJalan.diagnosa.map(d => `<li class="text-gray-700">${d.nama_diagnosa} <span class="text-gray-500">(${d.icd10_code || d.kode_icd10})</span></li>`).join('')
+                : (k.rawatJalan && k.rawatJalan.diagnosa ? `<li class="text-gray-700">${k.rawatJalan.diagnosa.nama_diagnosa || '-'} <span class="text-gray-500">(${k.rawatJalan.diagnosa.icd10_code || k.rawatJalan.diagnosa.kode_icd10 || '-'})</span></li>` : '<li class="text-gray-500 italic">Tidak ada diagnosa</li>')
+            );
 
-          // Format tanggal kunjungan agar sesuai dengan input type="date"
-          const formattedTanggalKunjungan = k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toISOString().split('T')[0] : '';
+            const formattedTanggalKunjungan = k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toLocaleDateString('id-ID') : '-';
+            const rawatInapDiagnosa = k.rawatInap?.diagnosa ? `${k.rawatInap.diagnosa.nama_diagnosa || '-'} (${k.rawatInap.diagnosa.kode_icd10 || '-'})` : '-';
 
 
-          return `
-            <div class="mt-2 ml-4 p-4 bg-gray-50 rounded-md border border-gray-300">
-              <div class="flex justify-between items-center">
-                <p class="font-semibold">Kunjungan (${k.tanggal_kunjungan})</p>
-                <div class="space-x-2">
-                  <button class="edit-kunjungan-btn text-sm text-blue-600 hover:underline"
-                          data-rm-id="${rm.id}"
-                          data-kunjungan-id="${k.id_kunjungan}"
-                          data-tanggal="${formattedTanggalKunjungan}"
-                          data-keluhan="${k.keluhan || ''}"
-                          data-tekanan-darah="${k.tekanan_darah || ''}"
-                          data-berat-badan="${k.berat_badan || ''}">Edit</button>
-                  <button class="delete-kunjungan-btn text-sm text-red-600 hover:underline"
-                          data-kunjungan-id="${k.id_kunjungan}">Hapus</button>
+            return `
+              <div class="mt-4 p-5 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                  <p class="font-bold text-gray-800">Kunjungan: <span class="text-blue-600">${formattedTanggalKunjungan}</span></p>
+                  <div class="space-x-2">
+                    <button class="edit-kunjungan-btn text-sm text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out"
+                            data-rm-id="${rm.id}"
+                            data-kunjungan-id="${k.id_kunjungan}"
+                            data-tanggal="${k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toISOString().split('T')[0] : ''}"
+                            data-keluhan="${k.keluhan || ''}"
+                            data-tekanan-darah="${k.tekanan_darah || ''}"
+                            data-berat-badan="${k.berat_badan || ''}">Edit</button>
+                    <button class="delete-kunjungan-btn text-sm text-red-600 hover:text-red-800 font-medium transition duration-150 ease-in-out"
+                            data-kunjungan-id="${k.id_kunjungan}">Hapus</button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm text-gray-700">
+                    <div><span class="font-medium">Keluhan:</span> ${k.keluhan || '-'}</div>
+                    <div><span class="font-medium">Tekanan Darah:</span> ${k.tekanan_darah || '-'}</div>
+                    <div><span class="font-medium">Berat Badan:</span> ${k.berat_badan ? `${k.berat_badan} kg` : '-'}</div>
+                </div>
+
+
+                ${k.rawatJalan ? `
+                  <div class="mt-4 p-4 border-l-4 border-blue-500 bg-blue-50 rounded-md">
+                    <p class="font-bold text-blue-700 mb-2">Rawat Jalan</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Catatan:</span> ${k.rawatJalan.catatan_dokter || '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Status:</span> <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${k.rawatJalan.status === 'selesai' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${k.rawatJalan.status || '-'}</span></p>
+                    <p class="text-sm font-medium text-gray-700 mt-2">Diagnosa:</p>
+                    <ul class="list-disc list-inside ml-4">
+                      ${rawatJalanDiagnosaHTML}
+                    </ul>
+                  </div>` : ''}
+
+                ${k.rawatInap ? `
+                  <div class="mt-4 p-4 border-l-4 border-green-500 bg-green-50 rounded-md">
+                    <p class="font-bold text-green-700 mb-2">Rawat Inap</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Kamar:</span> ${k.rawatInap.kamar || '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Masuk:</span> ${k.rawatInap.tanggal_masuk ? new Date(k.rawatInap.tanggal_masuk).toLocaleDateString('id-ID') : '-'}, <span class="font-medium">Keluar:</span> ${k.rawatInap.tanggal_keluar ? new Date(k.rawatInap.tanggal_keluar).toLocaleDateString('id-ID') : '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Diagnosa:</span> ${rawatInapDiagnosa}</p>
+                  </div>` : ''}
+              </div>`;
+          }).join('');
+
+          list.innerHTML += `
+            <div class="bg-white rounded-xl shadow-lg p-7 border border-gray-200 hover:shadow-xl transition-all duration-300">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900">${pasien.nama}</h2>
+                  <p class="text-sm text-gray-500">Tanggal Lahir: ${formattedTanggalLahir}</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="edit-rm-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg text-sm transition duration-150 ease-in-out" data-id="${rm.id}" data-status="${rm.status}">Edit RM</button>
+                  <button class="delete-rm-btn bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition duration-150 ease-in-out" data-id="${rm.id}">Hapus RM</button>
                 </div>
               </div>
-              <p>Keluhan: ${k.keluhan || '-'}</p>
-              <p>Tekanan Darah: ${k.tekanan_darah || '-'}</p>
-              <p>Berat Badan: ${k.berat_badan || '-'} kg</p>
 
-              ${k.rawatJalan ? `
-                <div class="ml-4 mt-2 p-3 border-l-4 border-blue-500 bg-blue-50">
-                  <p class="font-semibold text-blue-700">Rawat Jalan</p>
-                  <p>Catatan: ${k.rawatJalan.catatan_dokter || '-'}</p>
-                  <p>Status: ${k.rawatJalan.status || '-'}</p>
-                  <p>Diagnosa:</p>
-                  <ul class="list-disc list-inside">
-                    ${rawatJalanDiagnosaHTML || '<li>Tidak ada diagnosa</li>'}
-                  </ul>
-                </div>` : ''}
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
+                <div><span class="font-semibold text-gray-800">Gol. Darah:</span> ${rm.golongan_darah || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div><span class="font-semibold text-gray-800">Alergi:</span> ${rm.alergi || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div><span class="font-semibold text-gray-800">Riwayat Penyakit:</span> ${rm.riwayat_penyakit || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div>
+                  <span class="font-semibold text-gray-800">Status:</span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${rm.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                    ${rm.status}
+                  </span>
+                </div>
+                <div class="md:col-span-2">
+                  <span class="font-semibold text-gray-800">Catatan Dokter:</span>
+                  <p class="mt-1 p-3 bg-gray-50 rounded-md border border-gray-200 text-sm italic">${rm.catatan_dokter || 'Tidak ada catatan'}</p>
+                </div>
+              </div>
 
-              ${k.rawatInap ? `
-                <div class="ml-4 mt-2 p-3 border-l-4 border-green-500 bg-green-50">
-                  <p class="font-semibold text-green-700">Rawat Inap</p>
-                  <p>Kamar: ${k.rawatInap.kamar || '-'}</p>
-                  <p>Masuk: ${k.rawatInap.tanggal_masuk || '-'}, Keluar: ${k.rawatInap.tanggal_keluar || '-'}</p>
-                  <p>Diagnosa: ${k.rawatInap.diagnosa?.nama_diagnosa || '-'} (${k.rawatInap.diagnosa?.kode_icd10 || '-'})</p>
-                </div>` : ''}
-            </div>`;
-        }).join('');
+              <div class="mt-6 border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                  <p class="text-xl font-bold text-gray-800">Riwayat Kunjungan</p>
+                  <button onclick="showForm('${rm.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow transition duration-300 ease-in-out">
+                    + Tambah Kunjungan
+                  </button>
+                </div>
+                <div id="kunjunganList-${rm.id}" class="space-y-4">
+                  ${kunjunganHTML || '<p class="text-gray-500 italic text-center py-4">Belum ada riwayat kunjungan.</p>'}
+                </div>
+                <div id="form-${rm.id}" class="hidden mt-6 p-6 border border-blue-200 bg-blue-50 rounded-xl shadow-inner"></div>
+              </div>
+            </div>
+          `;
+        });
 
-        list.innerHTML += `
-  <div class="rm-card p-6">
-    <div class="flex justify-between items-center">
-      <div>
-        <div class="text-lg font-bold text-gray-800">${pasien.nama}</div>
-        <div class="text-sm text-gray-500">Tanggal Lahir: ${pasien.tanggal_lahir}</div>
-      </div>
-      <div class="space-x-2">
-        <button class="edit-rm-btn rm-btn rm-btn-neutral text-sm px-3 py-1" data-id="${rm.id}" data-status="${rm.status}">Edit RM</button>
-        <button class="delete-rm-btn rm-btn rm-btn-danger text-sm px-3 py-1" data-id="${rm.id}">Hapus RM</button>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-4 text-sm mt-2">
-      <div><span class="rm-label">Gol. Darah:</span> ${rm.golongan_darah || '-'}</div>
-      <div><span class="rm-label">Alergi:</span> ${rm.alergi || '-'}</div>
-      <div><span class="rm-label">Riwayat Penyakit:</span> ${rm.riwayat_penyakit || '-'}</div>
-      <div>
-        <span class="rm-label">Status:</span>
-        <span class="rm-badge">${rm.status}</span>
-      </div>
-      <div class="col-span-2"><span class="rm-label">Catatan Dokter:</span> ${rm.catatan_dokter || '-'}</div>
-    </div>
-    <div class="mt-4">
-      <div class="flex justify-between items-center mb-2">
-        <p class="text-sm font-semibold text-gray-700">Kunjungan:</p>
-        <button onclick="showForm('${rm.id}')" class="rm-btn rm-btn-main text-sm px-3 py-1">
-          + Kunjungan
-        </button>
-      </div>
-      ${kunjunganHTML || '<p class="text-gray-400">Belum ada kunjungan</p>'}
-      <div id="form-${rm.id}" class="hidden mt-4 border p-4 rounded bg-white shadow"></div>
-    </div>
-  </div>`;
-      });
-
-      fetchPasienOptions();
-      attachEventListeners(); // Panggil fungsi untuk memasang event listener setelah konten dimuat
+        fetchPasienOptions();
+        attachEventListeners();
+      } catch (error) {
+        console.error("Error fetching rekam medis:", error);
+        alert("Gagal memuat data rekam medis. Periksa koneksi atau server.");
+      }
     }
 
     function showForm(rekamMedisId) {
       document.querySelectorAll(`[id^="form-"]`).forEach(f => f.classList.add('hidden'));
       const container = document.getElementById(`form-${rekamMedisId}`);
       container.innerHTML = `
-        <h3 class="text-md font-semibold mb-2">Tambah Kunjungan</h3>
-        <form onsubmit="submitKunjungan(event, '${rekamMedisId}')">
-          <input type="date" name="tanggal_kunjungan" required class="mb-2 p-2 border rounded w-full" />
-          <input type="text" name="keluhan" required class="mb-2 p-2 border rounded w-full" placeholder="Keluhan" />
-          <input type="text" name="tekanan_darah" class="mb-2 p-2 border rounded w-full" placeholder="Tekanan Darah" />
-          <input type="number" step="0.1" name="berat_badan" class="mb-2 p-2 border rounded w-full" placeholder="Berat Badan (kg)" />
-          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+        <h3 class="text-xl font-bold text-blue-800 mb-4">Tambah Kunjungan Baru</h3>
+        <form onsubmit="submitKunjungan(event, '${rekamMedisId}')" class="space-y-4">
+          <div>
+            <label for="tanggal_kunjungan-${rekamMedisId}" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kunjungan</label>
+            <input type="date" id="tanggal_kunjungan-${rekamMedisId}" name="tanggal_kunjungan" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" />
+          </div>
+          <div>
+            <label for="keluhan-${rekamMedisId}" class="block text-sm font-medium text-gray-700 mb-1">Keluhan</label>
+            <input type="text" id="keluhan-${rekamMedisId}" name="keluhan" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Keluhan pasien" />
+          </div>
+          <div>
+            <label for="tekanan_darah-${rekamMedisId}" class="block text-sm font-medium text-gray-700 mb-1">Tekanan Darah</label>
+            <input type="text" id="tekanan_darah-${rekamMedisId}" name="tekanan_darah" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Cth: 120/80 mmHg" />
+          </div>
+          <div>
+            <label for="berat_badan-${rekamMedisId}" class="block text-sm font-medium text-gray-700 mb-1">Berat Badan (kg)</label>
+            <input type="number" step="0.1" id="berat_badan-${rekamMedisId}" name="berat_badan" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2.5" placeholder="Cth: 65.5" />
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" onclick="document.getElementById('form-${rekamMedisId}').classList.add('hidden')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 ease-in-out">Batal</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md transition duration-300 ease-in-out">Simpan Kunjungan</button>
+          </div>
         </form>
       `;
       container.classList.remove("hidden");
@@ -463,103 +495,103 @@
           inputKunjungan.berat_badan = 0;
       }
 
-      const res = await fetch('http://localhost:8001/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            mutation AddKunjungan($input: KunjunganInput!) {
-              addKunjungan(input: $input) {
-                id_kunjungan
+      try {
+        const res = await fetch('http://localhost:8001/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              mutation AddKunjungan($input: KunjunganInput!) {
+                tambahKunjungan(input: $input) {
+                  id_kunjungan
+                }
               }
-            }
-          `,
-          variables: { input: inputKunjungan }
-        })
-      });
+            `,
+            variables: { input: inputKunjungan }
+          })
+        });
 
-      const result = await res.json();
-      console.log("Add Kunjungan Result:", result);
+        const result = await res.json();
+        console.log("Add Kunjungan Result:", result);
 
-      if (result.data?.addKunjungan) {
-        alert('Kunjungan berhasil ditambahkan!');
-        document.getElementById(`form-${rekamMedisId}`).classList.add('hidden');
-        fetchRekamMedis();
-      } else {
-        alert('Gagal menambahkan kunjungan. Silakan cek konsol untuk detailnya.');
-        console.error("GraphQL Error adding Kunjungan:", result.errors || result);
+        if (result.data?.tambahKunjungan) {
+          alert('Kunjungan berhasil ditambahkan!');
+          document.getElementById(`form-${rekamMedisId}`).classList.add('hidden');
+          fetchRekamMedis();
+        } else {
+          alert('Gagal menambahkan kunjungan. Silakan cek konsol untuk detailnya.');
+          console.error("GraphQL Error adding Kunjungan:", result.errors || result);
+        }
+      } catch (error) {
+        console.error("Network or Fetch Error:", error);
+        alert("Terjadi masalah koneksi saat menambahkan kunjungan.");
       }
     }
 
-    // --- Aksi untuk Rekam Medis (Sudah ada di versi sebelumnya) ---
     function attachEventListeners() {
+      // Edit RM Button
       document.querySelectorAll('.edit-rm-btn').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
+          btn.onclick = (e) => { // Menggunakan onclick untuk kemudahan, bisa juga addEventListener
               const id = e.target.dataset.id;
-              // Temukan rekam medis yang sesuai dari allRecords
               const rekamMedisToEdit = allRecords.find(rm => rm.id === id);
 
               if (rekamMedisToEdit) {
-                  // Isi input hidden ID
                   document.getElementById('editId').value = rekamMedisToEdit.id;
-
-                  // Isi semua input field dengan data yang sudah ada
-                  // Pastikan format tanggal_dibuat sesuai untuk input type="date" (YYYY-MM-DD)
                   const tanggalDibuatFormatted = rekamMedisToEdit.tanggal_dibuat ? new Date(rekamMedisToEdit.tanggal_dibuat).toISOString().split('T')[0] : '';
                   document.getElementById('editTanggalDibuat').value = tanggalDibuatFormatted;
-
                   document.getElementById('editGolonganDarah').value = rekamMedisToEdit.golongan_darah || '';
                   document.getElementById('editAlergi').value = rekamMedisToEdit.alergi || '';
                   document.getElementById('editRiwayatPenyakit').value = rekamMedisToEdit.riwayat_penyakit || '';
                   document.getElementById('editCatatanDokter').value = rekamMedisToEdit.catatan_dokter || '';
-                  document.getElementById('editStatus').value = rekamMedisToEdit.status || ''; // Pastikan ini juga terisi
-
-                  // Tampilkan modal edit
+                  document.getElementById('editStatus').value = rekamMedisToEdit.status || '';
                   document.getElementById('editModal').classList.remove('hidden');
               } else {
                   alert('Data rekam medis tidak ditemukan untuk ID ini.');
                   console.error('Rekam Medis dengan ID', id, 'tidak ditemukan di allRecords.');
               }
-          });
+          };
       });
 
-        // Event Listener untuk tombol Hapus RM (dengan class delete-rm-btn)
-        document.querySelectorAll('.delete-rm-btn').forEach((btn) => {
-          btn.addEventListener('click', async (e) => {
+      // Delete RM Button
+      document.querySelectorAll('.delete-rm-btn').forEach((btn) => {
+          btn.onclick = async (e) => {
             const id = e.target.dataset.id;
-            const confirmDelete = confirm('Yakin ingin menghapus data rekam medis ID ' + id + '?');
+            const confirmDelete = confirm('Yakin ingin menghapus data rekam medis ini? Tindakan ini tidak bisa dibatalkan.');
 
             if (!confirmDelete) return;
 
-            const res = await fetch("http://localhost:8001/graphql", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                query: `
-                  mutation($id: Int!) {
-                    hapusRekamMedis(id: $id)
-                  }
-                `,
-                variables: { id: parseInt(id) }
-              })
-            });
+            try {
+              const res = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  query: `
+                    mutation($id: Int!) {
+                      hapusRekamMedis(id: $id)
+                    }
+                  `,
+                  variables: { id: parseInt(id) }
+                })
+              });
 
-            const result = await res.json();
-            if (result.data?.hapusRekamMedis) {
-              alert("Data rekam medis berhasil dihapus!");
-              fetchRekamMedis();
-            } else {
-              alert("Gagal menghapus data rekam medis.");
-              console.error(result.errors || result);
+              const result = await res.json();
+              if (result.data?.hapusRekamMedis) {
+                alert("Data rekam medis berhasil dihapus!");
+                fetchRekamMedis();
+              } else {
+                alert("Gagal menghapus data rekam medis.");
+                console.error(result.errors || result);
+              }
+            } catch (error) {
+              console.error("Network or Fetch Error:", error);
+              alert("Terjadi masalah koneksi saat menghapus rekam medis.");
             }
-          });
+          };
         });
 
-        // --- Aksi BARU untuk Kunjungan ---
-
-        // Event Listener untuk tombol Edit Kunjungan (dengan class edit-kunjungan-btn)
-        document.querySelectorAll('.edit-kunjungan-btn').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
+      // Edit Kunjungan Button
+      document.querySelectorAll('.edit-kunjungan-btn').forEach((btn) => {
+          btn.onclick = (e) => {
             const kunjunganId = e.target.dataset.kunjunganId;
             const tanggal = e.target.dataset.tanggal;
             const keluhan = e.target.dataset.keluhan;
@@ -573,39 +605,44 @@
             document.getElementById('editKunjunganBeratBadan').value = beratBadan;
 
             document.getElementById('editKunjunganModal').classList.remove('hidden');
-          });
+          };
         });
 
-        // Event Listener untuk tombol Hapus Kunjungan (dengan class delete-kunjungan-btn)
-        document.querySelectorAll('.delete-kunjungan-btn').forEach((btn) => {
-          btn.addEventListener('click', async (e) => {
+      // Delete Kunjungan Button
+      document.querySelectorAll('.delete-kunjungan-btn').forEach((btn) => {
+          btn.onclick = async (e) => {
             const kunjunganId = e.target.dataset.kunjunganId;
-            const confirmDelete = confirm('Yakin ingin menghapus kunjungan ID ' + kunjunganId + '?');
+            const confirmDelete = confirm('Yakin ingin menghapus kunjungan ini?');
 
             if (!confirmDelete) return;
 
-            const res = await fetch("http://localhost:8001/graphql", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                query: `
-                  mutation($id_kunjungan: Int!) {
-                    hapusKunjungan(id_kunjungan: $id_kunjungan)
-                  }
-                `,
-                variables: { id_kunjungan: parseInt(kunjunganId) }
-              })
-            });
+            try {
+              const res = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  query: `
+                    mutation($id_kunjungan: Int!) {
+                      hapusKunjungan(id_kunjungan: $id_kunjungan)
+                    }
+                  `,
+                  variables: { id_kunjungan: parseInt(kunjunganId) }
+                })
+              });
 
-            const result = await res.json();
-            if (result.data?.hapusKunjungan) {
-              alert("Kunjungan berhasil dihapus!");
-              fetchRekamMedis(); // Perbarui daftar setelah penghapusan
-            } else {
-              alert("Gagal menghapus kunjungan.");
-              console.error(result.errors || result);
+              const result = await res.json();
+              if (result.data?.hapusKunjungan) {
+                alert("Kunjungan berhasil dihapus!");
+                fetchRekamMedis();
+              } else {
+                alert("Gagal menghapus kunjungan.");
+                console.error(result.errors || result);
+              }
+            } catch (error) {
+              console.error("Network or Fetch Error:", error);
+              alert("Terjadi masalah koneksi saat menghapus kunjungan.");
             }
-          });
+          };
         });
     }
 
@@ -619,7 +656,6 @@
       e.preventDefault();
 
       const id = parseInt(document.getElementById('editId').value);
-      // Ambil nilai dari semua field input di form edit
       const tanggal_dibuat = document.getElementById('editTanggalDibuat').value;
       const golongan_darah = document.getElementById('editGolonganDarah').value;
       const alergi = document.getElementById('editAlergi').value;
@@ -637,44 +673,49 @@
         status: status || null
       };
 
-      const res = await fetch("http://localhost:8001/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            mutation UpdateRekamMedis($input: UpdateRekamMedisInput!) {
-              updateRekamMedis(input: $input) {
-                id
-                tanggal_dibuat
-                golongan_darah
-                alergi
-                riwayat_penyakit
-                catatan_dokter
-                status
+      try {
+        const res = await fetch("http://localhost:8001/graphql", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              mutation UpdateRekamMedis($input: UpdateRekamMedisInput!) {
+                updateRekamMedis(input: $input) {
+                  id
+                  tanggal_dibuat
+                  golongan_darah
+                  alergi
+                  riwayat_penyakit
+                  catatan_dokter
+                  status
+                }
               }
-            }
-          `,
-          variables: { input: inputRekamMedis }
-        })
-      });
+            `,
+            variables: { input: inputRekamMedis }
+          })
+        });
 
-      const result = await res.json();
-      if (result.data?.updateRekamMedis) {
-        alert("Data rekam medis berhasil diperbarui!");
-        document.getElementById('editModal').classList.add('hidden');
-        fetchRekamMedis(); // Memperbarui tampilan data di halaman
-      } else {
-        alert("Gagal update data rekam medis. Silakan cek konsol untuk detailnya.");
-        console.error(result.errors || result);
+        const result = await res.json();
+        if (result.data?.updateRekamMedis) {
+          alert("Data rekam medis berhasil diperbarui!");
+          document.getElementById('editModal').classList.add('hidden');
+          fetchRekamMedis();
+        } else {
+          alert("Gagal update data rekam medis. Silakan cek konsol untuk detailnya.");
+          console.error(result.errors || result);
+        }
+      } catch (error) {
+        console.error("Network or Fetch Error:", error);
+        alert("Terjadi masalah koneksi saat memperbarui rekam medis.");
       }
     });
 
-    // Batal edit Kunjungan BARU
+    // Batal edit Kunjungan
     document.getElementById('cancelEditKunjungan').addEventListener('click', () => {
       document.getElementById('editKunjunganModal').classList.add('hidden');
     });
 
-    // Submit edit form Kunjungan BARU
+    // Submit edit form Kunjungan
     document.getElementById('editKunjunganForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -685,42 +726,323 @@
       const berat_badan = parseFloat(document.getElementById('editKunjunganBeratBadan').value);
 
       const inputKunjunganUpdate = {
-          id_kunjungan, // ID kunjungan yang akan diupdate
+          id_kunjungan,
           tanggal_kunjungan,
           keluhan,
           tekanan_darah,
-          berat_badan: isNaN(berat_badan) ? 0 : berat_badan // Handle NaN for berat_badan
+          berat_badan: isNaN(berat_badan) ? 0 : berat_badan
       };
 
-      const res = await fetch("http://localhost:8001/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            mutation UpdateKunjungan($input: UpdateKunjunganInput!) {
-              updateKunjungan(input: $input) {
-                id_kunjungan
-                tanggal_kunjungan
-                keluhan
+      try {
+        const res = await fetch("http://localhost:8001/graphql", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `
+              mutation UpdateKunjungan($input: UpdateKunjunganInput!) {
+                updateKunjungan(input: $input) {
+                  id_kunjungan
+                  tanggal_kunjungan
+                  keluhan
+                }
               }
-            }
-          `,
-          variables: { input: inputKunjunganUpdate }
-        })
-      });
+            `,
+            variables: { input: inputKunjunganUpdate }
+          })
+        });
 
-      const result = await res.json();
-      if (result.data?.updateKunjungan) {
-        alert("Data kunjungan berhasil diperbarui!");
-        document.getElementById('editKunjunganModal').classList.add('hidden');
-        fetchRekamMedis();
-      } else {
-        alert("Gagal update data kunjungan. Silakan cek konsol.");
-        console.error(result.errors || result);
+        const result = await res.json();
+        if (result.data?.updateKunjungan) {
+          alert("Data kunjungan berhasil diperbarui!");
+          document.getElementById('editKunjunganModal').classList.add('hidden');
+          fetchRekamMedis();
+        } else {
+          alert("Gagal update data kunjungan. Silakan cek konsol.");
+          console.error(result.errors || result);
+        }
+      } catch (error) {
+        console.error("Network or Fetch Error:", error);
+        alert("Terjadi masalah koneksi saat memperbarui kunjungan.");
       }
     });
 
-    fetchRekamMedis(); // Panggil fungsi ini untuk pertama kali saat halaman dimuat
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const pasienId = document.getElementById('searchPasienId').value;
+      if (pasienId) {
+        fetchRekamMedis(parseInt(pasienId)); // Panggil dengan ID pasien
+        document.getElementById('clearSearchButton').classList.remove('hidden'); // Tampilkan tombol clear
+      } else {
+        alert('Mohon masukkan ID Pasien untuk mencari.');
+      }
+    });
+
+    document.getElementById('clearSearchButton').addEventListener('click', () => {
+      document.getElementById('searchPasienId').value = ''; // Kosongkan input
+      document.getElementById('clearSearchButton').classList.add('hidden'); // Sembunyikan tombol clear
+      fetchRekamMedis(); // Tampilkan semua rekam medis lagi
+    });
+
+    async function fetchRekamMedis(idPasien = null) { // Tambahkan idPasien sebagai parameter opsional
+      document.getElementById('loading').classList.remove('hidden'); // Tampilkan loading
+      let query;
+      let variables = {};
+
+      if (idPasien) {
+        // Query untuk mencari berdasarkan ID Pasien
+        query = `
+          query GetRekamMedisByIdPasien($id_pasien: Int!) {
+            getRekamMedisByIdPasien(id_pasien: $id_pasien) {
+              id
+              tanggal_dibuat
+              golongan_darah
+              alergi
+              riwayat_penyakit
+              catatan_dokter
+              status
+              pasien { id nama tanggal_lahir }
+              kunjungan {
+                id_kunjungan
+                tanggal_kunjungan
+                keluhan
+                tekanan_darah
+                berat_badan
+                id_rekam_medis
+                rawatJalan {
+                  tanggal_kunjungan
+                  keluhan
+                  catatan_dokter
+                  status
+                  diagnosa {
+                    nama_diagnosa
+                    kode_icd10
+                  }
+                }
+                rawatInap {
+                  kamar
+                  tanggal_masuk
+                  tanggal_keluar
+                  diagnosa {
+                    nama_diagnosa
+                    kode_icd10
+                  }
+                }
+              }
+            }
+          }
+        `;
+        variables = { id_pasien: idPasien };
+      } else {
+        // Query default untuk semua rekam medis
+        query = `
+          query {
+            getAllRekamMedis {
+              id
+              tanggal_dibuat
+              golongan_darah
+              alergi
+              riwayat_penyakit
+              catatan_dokter
+              status
+              pasien { id nama tanggal_lahir }
+              kunjungan {
+                id_kunjungan
+                tanggal_kunjungan
+                keluhan
+                tekanan_darah
+                berat_badan
+                id_rekam_medis
+                rawatJalan {
+                  tanggal_kunjungan
+                  keluhan
+                  catatan_dokter
+                  status
+                  diagnosa {
+                    nama_diagnosa
+                    kode_icd10
+                  }
+                }
+                rawatInap {
+                  kamar
+                  tanggal_masuk
+                  tanggal_keluar
+                  diagnosa {
+                    nama_diagnosa
+                    kode_icd10
+                  }
+                }
+              }
+            }
+          }
+        `;
+      }
+
+
+      try {
+        const res = await fetch('http://localhost:8001/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: query,
+            variables: variables
+          })
+        });
+
+        const result = await res.json();
+        console.log("FETCH RESULT:", result);
+
+        if (result.errors) {
+          console.error("GraphQL Error:", result.errors);
+          alert("Terjadi error saat ambil data rekam medis!");
+          // Sembunyikan loading jika ada error
+          document.getElementById('loading').classList.add('hidden');
+          return;
+        }
+
+        // Perhatian: Jika `idPasien` ada, `result.data` akan berisi `getRekamMedisByIdPasien`.
+        // Jika tidak ada, `result.data` akan berisi `getAllRekamMedis`.
+        // Kita perlu menangani ini.
+        let rekamMedisData = [];
+        if (idPasien) {
+            // Jika pencarian berdasarkan ID pasien, hasilnya bisa null jika tidak ditemukan
+            if (result.data && result.data.getRekamMedisByIdPasien) {
+                rekamMedisData = [result.data.getRekamMedisByIdPasien]; // Masukkan ke dalam array
+            } else {
+                rekamMedisData = []; // Tidak ditemukan
+            }
+        } else {
+            rekamMedisData = result.data.getAllRekamMedis || [];
+        }
+
+
+        allRecords = rekamMedisData; // Update global allRecords
+        const list = document.getElementById('rekamMedisList');
+        list.innerHTML = ''; // Kosongkan daftar sebelum mengisi
+
+        if (allRecords.length === 0 && idPasien) {
+            list.innerHTML = '<p class="text-center text-gray-500 italic py-10">Tidak ditemukan rekam medis untuk ID Pasien ini.</p>';
+        } else if (allRecords.length === 0 && !idPasien) {
+            list.innerHTML = '<p class="text-center text-gray-500 italic py-10">Belum ada rekam medis yang ditambahkan.</p>';
+        }
+
+
+        allRecords.forEach(rm => {
+          const pasien = rm.pasien || { nama: '-', tanggal_lahir: '-' };
+          const formattedTanggalLahir = pasien.tanggal_lahir ? new Date(pasien.tanggal_lahir).toLocaleDateString('id-ID') : '-';
+
+          const kunjunganHTML = rm.kunjungan.map(k => {
+            const rawatJalanDiagnosaHTML = (k.rawatJalan && k.rawatJalan.diagnosa && Array.isArray(k.rawatJalan.diagnosa)
+                ? k.rawatJalan.diagnosa.map(d => `<li class="text-gray-700">${d.nama_diagnosa} <span class="text-gray-500">(${d.icd10_code || d.kode_icd10})</span></li>`).join('')
+                : (k.rawatJalan && k.rawatJalan.diagnosa ? `<li class="text-gray-700">${k.rawatJalan.diagnosa.nama_diagnosa || '-'} <span class="text-gray-500">(${k.rawatJalan.diagnosa.icd10_code || k.rawatJalan.diagnosa.kode_icd10 || '-'})</span></li>` : '<li class="text-gray-500 italic">Tidak ada diagnosa</li>')
+            );
+
+            const formattedTanggalKunjungan = k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toLocaleDateString('id-ID') : '-';
+            const rawatInapDiagnosa = k.rawatInap?.diagnosa ? `${k.rawatInap.diagnosa.nama_diagnosa || '-'} (${k.rawatInap.diagnosa.kode_icd10 || '-'})` : '-';
+
+
+            return `
+              <div class="mt-4 p-5 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                  <p class="font-bold text-gray-800">Kunjungan: <span class="text-blue-600">${formattedTanggalKunjungan}</span></p>
+                  <div class="space-x-2">
+                    <button class="edit-kunjungan-btn text-sm text-blue-600 hover:text-blue-800 font-medium transition duration-150 ease-in-out"
+                            data-rm-id="${rm.id}"
+                            data-kunjungan-id="${k.id_kunjungan}"
+                            data-tanggal="${k.tanggal_kunjungan ? new Date(k.tanggal_kunjungan).toISOString().split('T')[0] : ''}"
+                            data-keluhan="${k.keluhan || ''}"
+                            data-tekanan-darah="${k.tekanan_darah || ''}"
+                            data-berat-badan="${k.berat_badan || ''}">Edit</button>
+                    <button class="delete-kunjungan-btn text-sm text-red-600 hover:text-red-800 font-medium transition duration-150 ease-in-out"
+                            data-kunjungan-id="${k.id_kunjungan}">Hapus</button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm text-gray-700">
+                    <div><span class="font-medium">Keluhan:</span> ${k.keluhan || '-'}</div>
+                    <div><span class="font-medium">Tekanan Darah:</span> ${k.tekanan_darah || '-'}</div>
+                    <div><span class="font-medium">Berat Badan:</span> ${k.berat_badan ? `${k.berat_badan} kg` : '-'}</div>
+                </div>
+
+
+                ${k.rawatJalan ? `
+                  <div class="mt-4 p-4 border-l-4 border-blue-500 bg-blue-50 rounded-md">
+                    <p class="font-bold text-blue-700 mb-2">Rawat Jalan</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Catatan:</span> ${k.rawatJalan.catatan_dokter || '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Status:</span> <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${k.rawatJalan.status === 'selesai' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${k.rawatJalan.status || '-'}</span></p>
+                    <p class="text-sm font-medium text-gray-700 mt-2">Diagnosa:</p>
+                    <ul class="list-disc list-inside ml-4">
+                      ${rawatJalanDiagnosaHTML}
+                    </ul>
+                  </div>` : ''}
+
+                ${k.rawatInap ? `
+                  <div class="mt-4 p-4 border-l-4 border-green-500 bg-green-50 rounded-md">
+                    <p class="font-bold text-green-700 mb-2">Rawat Inap</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Kamar:</span> ${k.rawatInap.kamar || '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Masuk:</span> ${k.rawatInap.tanggal_masuk ? new Date(k.rawatInap.tanggal_masuk).toLocaleDateString('id-ID') : '-'}, <span class="font-medium">Keluar:</span> ${k.rawatInap.tanggal_keluar ? new Date(k.rawatInap.tanggal_keluar).toLocaleDateString('id-ID') : '-'}</p>
+                    <p class="text-sm text-gray-700"><span class="font-medium">Diagnosa:</span> ${rawatInapDiagnosa}</p>
+                  </div>` : ''}
+              </div>`;
+          }).join('');
+
+          list.innerHTML += `
+            <div class="bg-white rounded-xl shadow-lg p-7 border border-gray-200 hover:shadow-xl transition-all duration-300">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900">${pasien.nama} <span class="text-gray-500 text-base font-normal">(ID Pasien: ${pasien.id})</span></h2>
+                  <p class="text-sm text-gray-500">Tanggal Lahir: ${formattedTanggalLahir}</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="edit-rm-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg text-sm transition duration-150 ease-in-out" data-id="${rm.id}" data-status="${rm.status}">Edit RM</button>
+                  <button class="delete-rm-btn bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg text-sm transition duration-150 ease-in-out" data-id="${rm.id}">Hapus RM</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
+                <div><span class="font-semibold text-gray-800">Gol. Darah:</span> ${rm.golongan_darah || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div><span class="font-semibold text-gray-800">Alergi:</span> ${rm.alergi || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div><span class="font-semibold text-gray-800">Riwayat Penyakit:</span> ${rm.riwayat_penyakit || '<span class="italic text-gray-500">Tidak ada</span>'}</div>
+                <div>
+                  <span class="font-semibold text-gray-800">Status:</span>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${rm.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                    ${rm.status}
+                  </span>
+                </div>
+                <div class="md:col-span-2">
+                  <span class="font-semibold text-gray-800">Catatan Dokter:</span>
+                  <p class="mt-1 p-3 bg-gray-50 rounded-md border border-gray-200 text-sm italic">${rm.catatan_dokter || 'Tidak ada catatan'}</p>
+                </div>
+              </div>
+
+              <div class="mt-6 border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                  <p class="text-xl font-bold text-gray-800">Riwayat Kunjungan</p>
+                  <button onclick="showForm('${rm.id}')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow transition duration-300 ease-in-out">
+                    + Tambah Kunjungan
+                  </button>
+                </div>
+                <div id="kunjunganList-${rm.id}" class="space-y-4">
+                  ${kunjunganHTML || '<p class="text-gray-500 italic text-center py-4">Belum ada riwayat kunjungan.</p>'}
+                </div>
+                <div id="form-${rm.id}" class="hidden mt-6 p-6 border border-blue-200 bg-blue-50 rounded-xl shadow-inner"></div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Pastikan fetchPasienOptions hanya dipanggil saat tidak ada pencarian aktif
+        if (!idPasien) {
+            fetchPasienOptions();
+        }
+        attachEventListeners();
+      } catch (error) {
+        console.error("Error fetching rekam medis:", error);
+        alert("Gagal memuat data rekam medis. Periksa koneksi atau server.");
+      } finally {
+        document.getElementById('loading').classList.add('hidden'); // Selalu sembunyikan loading
+      }
+    }
+
+    // Inisialisasi awal saat halaman dimuat
+    fetchRekamMedis();
   </script>
 </body>
 </html>

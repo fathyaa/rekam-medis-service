@@ -35,6 +35,12 @@ const resolvers = {
 
       const json = await response.json();
       return json.data.getAllPasien;
+    },
+    getRekamMedisByIdPasien: async (_, { id_pasien }, { db }) => {
+    return db.RekamMedis.findOne({
+      where: { id_pasien },
+      include: { model: db.Kunjungan, as: 'kunjungan' }
+    });
     }
   },
 
@@ -96,7 +102,7 @@ const resolvers = {
       if (!kunjungan) throw new Error("Kunjungan tidak ditemukan");
       await kunjungan.destroy();
       return true;
-    },
+    }
   },
 
   Kunjungan: {

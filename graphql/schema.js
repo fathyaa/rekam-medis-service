@@ -113,6 +113,7 @@ const typeDefs = gql`
     getDiagnosaJalanById(id: Int!): DiagnosaJalan
     getAllRawatInap: [RawatInap]
     getAllRawatJalan: [RawatJalan]
+    getRekamMedisByIdPasien(id_pasien: Int!): RekamMedis
   }
 
   type Mutation {
