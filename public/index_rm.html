@@ -175,6 +175,7 @@
   <script>
     let allRecords = [];
     const REKAM_MEDIS_URL = 'https://gtw-rekam-medis-service.up.railway.app/graphql' || 'http://localhost:8001/graphql';
+    const DATA_INDIVIDU_URL = 'https://gtw-data-individu-service.up.railway.app/graphql' || 'http://localhost:8000/graphql';
 
     document.getElementById('loading').classList.remove('hidden');
     fetchRekamMedis().finally(() => {
@@ -192,7 +193,7 @@
         }
       });
       console.log("DEBUG: existingPasienIds yang terkumpul:", existingPasienIds);
-      const res = await fetch(REKAM_MEDIS_URL, {
+      const res = await fetch(DATA_INDIVIDU_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: `{ getAllPasien { id nama } }` })
