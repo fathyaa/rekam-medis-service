@@ -16,7 +16,7 @@ const resolvers = {
       return db.Kunjungan.findAll();
     },
     getAllPasien: async () => {
-      const response = await fetch("http://data-individu-service:8000/graphql", {
+      const response = await fetch("https://gtw-data-individu-service.up.railway.app/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,7 +123,7 @@ const resolvers = {
         }
       `;
 
-      const response = await fetch(process.env.RAWATINAP_URL || 'http://rawat-inap-service:8003/graphql', {
+      const response = await fetch(process.env.RAWATINAP_URL || 'https://gtw-rawat-inap-service.up.railway.app/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -154,7 +154,7 @@ const resolvers = {
         }
       `;
 
-      const response = await fetch(process.env.RAWATJALAN_URL || 'http://rawat-jalan-service:8004/graphql', {
+      const response = await fetch(process.env.RAWATJALAN_URL || 'https://gtw-rawat-jalan-service.up.railway.app/graphql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

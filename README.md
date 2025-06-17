@@ -67,7 +67,8 @@ Secara default akan berjalan di: `http://localhost:8000`
 
 ## 📊 GraphQL Endpoint
 
-- **URL:** `http://localhost:8001/graphql`
+- **URL:** `http://localhost:8001/graphql` / 
+- **Prod URL:** `https://gtw-rekam-medis-service.up.railway.app/graphql`
 
 ### Contoh Query:
 

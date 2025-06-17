@@ -217,7 +217,7 @@
   </div>
 
   <script>
-    const graphqlUrl = 'http://localhost:8001/graphql';
+    const REKAM_MEDIS_URL = 'https://gtw-rekam-medis-service.up.railway.app/graphql' || 'http://localhost:8001/graphql';
     let currentEditId = null;
     let deleteId = null;
     let allKunjungan = [];
@@ -233,7 +233,7 @@
       emptyState.classList.add('hidden');
 
       try {
-        const res = await fetch(graphqlUrl, {
+        const res = await fetch(REKAM_MEDIS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -461,8 +461,8 @@
       try {
         const mutation = currentEditId ? 'updateKunjungan' : 'createKunjungan';
         const variables = currentEditId ? { id: currentEditId, ...formData } : formData;
-        
-        const res = await fetch(graphqlUrl, {
+
+        const res = await fetch(REKAM_MEDIS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -500,7 +500,7 @@
       if (!deleteId) return;
 
       try {
-        const res = await fetch(graphqlUrl, {
+        const res = await fetch(REKAM_MEDIS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
